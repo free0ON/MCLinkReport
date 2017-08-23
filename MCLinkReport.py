@@ -22,7 +22,7 @@ class DemonConvertation(Thread):
     pathname = str(os.path.dirname(sys.argv[0])).replace('/','\\')
     scan_folder = pathname
     dest_folder = pathname
-    template_filename = 'шаблон.xls'
+    template_filename = 'новый_шаблон.xls'
     autoopen = False
 
     def __init__(self):
@@ -138,40 +138,53 @@ class DemonConvertation(Thread):
         else:
             CI_Name = 'Набор гирь'
 
+        ws.write(1, 4, CertificateNumber)  # номер протокола
         ws.write(2, 1, EndDate)  # дата поверки
         ws.write(3, 1, CI_Name)  # наименование СИ
         ws.write(2, 7, TestWeightSet_AccuracyClass)  # класс точности
-        ws.write(3, 7, TestWeightSet_SerialNumber)  # серийный номер
+        #ws.write(3, 7, ) # номинальное заначение массы
+        ws.write(4, 7, TestWeightSet_SerialNumber)  # серийный номер
+        ws.write(4, 1, TestWeightSet_Description)  # год выпуска
+        ws.write(5, 1, Company_Name)  # название заказчика
+        ws.write(6, 1, CustomerNumber)  # номер заказчика
 
-        ws.write(4, 1, Company_Name)  # ИНН
-        ws.write(1, 4, CertificateNumber)  # номер протокола
-        ws.write(5, 1, CustomerNumber)  # название заказчика
 
-        ws.write(5, 3, TestWeightSet_Description)  # год выпуска
 
-        ws.write(21, 2, AirTemperature_Min, styleCellCenter)
-        ws.write(22, 2, AirTemperature_Max, styleCellCenter)
-        ws.write(23, 2, AirTemperature_Avr, styleCellCenter)
+        ws.write(31, 2, AirTemperature_Min, styleCellCenter)
+        ws.write(32, 2, AirTemperature_Max, styleCellCenter)
+        ws.write(33, 2, AirTemperature_Avr, styleCellCenter)
 
-        ws.write(21, 5, Humidity_Min, styleCellCenter)
-        ws.write(22, 5, Humidity_Max, styleCellCenter)
-        ws.write(23, 5, Humidity_Avr, styleCellCenter)
+        ws.write(31, 4, Humidity_Min, styleCellCenter)
+        ws.write(32, 4, Humidity_Max, styleCellCenter)
+        ws.write(33, 4, Humidity_Avr, styleCellCenter)
 
-        ws.write(21, 7, AirPressure_Min, styleCellCenter)
-        ws.write(22, 7, AirPressure_Max, styleCellCenter)
-        ws.write(23, 7, AirPressure_Avr, styleCellCenter)
+        ws.write(31, 6, AirPressure_Min, styleCellCenter)
+        ws.write(32, 6, AirPressure_Max, styleCellCenter)
+        ws.write(33, 6, AirPressure_Avr, styleCellCenter)
 
-        # название набора гирь
-        ws.write(28, 0, 'Набор гирь, Зав. № ' + ReferenceWeightSet_SerialNumber, styleCellLeft)
-        # описание компаратора. В поле Описание (Description) должны быть записаны дискретность и СКО модели компаратора
-        ws.write(28, 5, ReferenceWeightSet_Class, styleCellCenter)
+        row = 37
+        for ref in ReferenceWeightSet:
+            # название набора гирь
+            ws.write(row, 0, 'Набор гирь', styleCellCenter)
+            ReferenceWeightSet_SerialNumber = ref.get('SerialNumber')
+            ws.write(row, 2, ReferenceWeightSet_SerialNumber, styleCellCenter)
+            ReferenceWeightSet_Class = ref.get('Class')
+            # класс точности набора
+            ws.write(row, 4, ReferenceWeightSet_Class, styleCellCenter)
 
-        # название компаратора
-        ws.write(29, 0, MassComparator_Model + ', Зав. № ' + MassComparator_SerialNumber, styleCellLeft)
-        # описание компаратора. В поле Описание (Description) должны быть записаны дискретность и СКО модели компаратора
-        ws.write(29, 5, MassComparator_Description, styleCellCenter)
+            row += 1
 
-        Row = 38
+        for comp in MassComparator:
+            # название компаратора
+            MassComparator_Model = comp.get('Model')
+            ws.write(row, 0, MassComparator_Model,styleCellCenter)
+            MassComparator_SerialNumber = comp.get('SerialNumber')
+            ws.write(row, 2, MassComparator_SerialNumber, styleCellCenter)
+            MassComparator_Description = comp.get('Description').text
+            # описание компаратора. В поле Описание (Description) должны быть записаны дискретность и СКО модели компаратора
+            ws.write(row, 4, MassComparator_Description, styleCellCenter)
+
+        Row = 46
         for i in TestWeightCalibrationAsReturned:
             Nominal = i.find('Nominal').text
             NominalUnit = i.find('NominalUnit').text
@@ -277,8 +290,8 @@ class DemonConvertation(Thread):
 
         for y in range(0, 9):
             ws.write(Row, y, '', styleCellTopLine)
-        ws.write(Row + 4, 0, 'Поверитель(и):_____________________ ' + CalibratedBy)
-        ws.write(Row + 4, 7, )
+        ws.write(Row + 6, 0, 'Поверитель:_____________________ ' + CalibratedBy)
+        ws.write(Row + 6, 8, datetime.datetime.now())
 
         # сохранение данных в новый документ
         date_time = str(datetime.datetime.now()).replace(':', '')
