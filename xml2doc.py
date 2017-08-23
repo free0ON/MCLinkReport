@@ -284,7 +284,6 @@ class DemonConvertation(Thread):
         date_time = str(datetime.datetime.now()).replace(':', '')
 
         wb.save(self.dest_folder + '\\' + date_time + '.xls')
-        #shutil.move(xml_filename, self.dest_folder + '\\' + date_time + '.xml')
         os.remove(xml_filename)
         if self.autoopen == True:
             os.startfile(self.dest_folder + '\\' + date_time + '.xls')
