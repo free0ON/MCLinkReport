@@ -10,6 +10,7 @@ import xml.etree.ElementTree as etree
 from threading import Thread
 from time import sleep
 
+
 import xlrd
 import xlwt
 from PyQt5.QtGui import QIcon
@@ -22,7 +23,7 @@ class DemonConvertation(Thread):
     pathname = str(os.path.dirname(sys.argv[0])).replace('/','\\')
     scan_folder = pathname
     dest_folder = pathname
-    template_filename = 'новый_шаблон.xls'
+    template_filename = 'шаблон_новый.xls'
     autoopen = False
 
     def __init__(self):
@@ -52,6 +53,7 @@ class DemonConvertation(Thread):
         TestWeightSet = WeightSetCalibration.find('TestWeightSet')
         TestWeightSet_Description = TestWeightSet.find('Description').text
         TestWeightCalibrations = TestWeightSet.find('TestWeightCalibrations')
+
 
         EnvironmentalConditions = WeightSetCalibration.find('EnvironmentalConditions')
         AirTemperature = EnvironmentalConditions.find('AirTemperature')
@@ -108,7 +110,8 @@ class DemonConvertation(Thread):
         # ReferenceWeight_Array = []  # массив наборов эталонов
         TestWeightSet_SerialNumber = TestWeightSet.get('SerialNumber')
         TestWeightSet_AccuracyClass = TestWeightSet.get('AccuracyClass')
-
+        TestWeightSet_Manufacturer =  TestWeightSet.get('Manufacturer')
+        TestWeightSet_Range = TestWeightSet.get('Range')
         TestWeightCalibrationAsReturned = TestWeightCalibrations.findall('TestWeightCalibrationAsReturned')
 
         rb = xlrd.open_workbook(self.template_filename, formatting_info=True, on_demand=True)  # открываем книгу
@@ -141,13 +144,13 @@ class DemonConvertation(Thread):
         ws.write(1, 4, CertificateNumber)  # номер протокола
         ws.write(2, 1, EndDate)  # дата поверки
         ws.write(3, 1, CI_Name)  # наименование СИ
-        ws.write(2, 7, TestWeightSet_AccuracyClass)  # класс точности
-        #ws.write(3, 7, ) # номинальное заначение массы
-        ws.write(4, 7, TestWeightSet_SerialNumber)  # серийный номер
+        ws.write(2, 6, TestWeightSet_AccuracyClass)  # класс точности
+        ws.write(3, 6, TestWeightSet_Range) # номинальное заначение массы
+        ws.write(4, 6, TestWeightSet_SerialNumber)  # серийный номер
         ws.write(4, 1, TestWeightSet_Description)  # год выпуска
         ws.write(5, 1, Company_Name)  # название заказчика
         ws.write(6, 1, CustomerNumber)  # номер заказчика
-
+        ws.write(7, 1, TestWeightSet_Manufacturer) # производитель гирь
 
 
         ws.write(31, 2, AirTemperature_Min, styleCellCenter)
@@ -171,7 +174,6 @@ class DemonConvertation(Thread):
             ReferenceWeightSet_Class = ref.get('Class')
             # класс точности набора
             ws.write(row, 4, ReferenceWeightSet_Class, styleCellCenter)
-
             row += 1
 
         for comp in MassComparator:
@@ -180,9 +182,10 @@ class DemonConvertation(Thread):
             ws.write(row, 0, MassComparator_Model,styleCellCenter)
             MassComparator_SerialNumber = comp.get('SerialNumber')
             ws.write(row, 2, MassComparator_SerialNumber, styleCellCenter)
-            MassComparator_Description = comp.get('Description').text
+            MassComparator_Description = comp.find('Description').text
             # описание компаратора. В поле Описание (Description) должны быть записаны дискретность и СКО модели компаратора
             ws.write(row, 4, MassComparator_Description, styleCellCenter)
+            row += 1
 
         Row = 46
         for i in TestWeightCalibrationAsReturned:
@@ -211,7 +214,19 @@ class DemonConvertation(Thread):
             Diff = []
             Avr = 0
             WeightReadingUnit = 0
-            if ((len(WeightReading) % 3) == 0):  # 1 ABA
+
+            # Определение метода
+            Method = ''
+            for wr in WeightReading:
+                Method += wr.get('Step') + wr.get('SeriesIndex')
+
+
+
+            # ABABAB
+
+
+            # ABA
+            if ((len(WeightReading) % 3) == 0 ):  # 1 ABA
                 for cicle in range(int(len(WeightReading) / 3)):
                     for x in range(RowWeightReading, RowWeightReading + 3):
                         for y in range(2, 8):
@@ -290,11 +305,16 @@ class DemonConvertation(Thread):
 
         for y in range(0, 9):
             ws.write(Row, y, '', styleCellTopLine)
+
+        ws.write(Row + 2, 0, 'Заключение по результатам поверки:')
+        ws.write(Row + 3, 0, 'На основании результатов поверки выдано свидетельство о поверке №')
+
         ws.write(Row + 6, 0, 'Поверитель:_____________________ ' + CalibratedBy)
-        ws.write(Row + 6, 8, datetime.datetime.now())
+        ws.write(Row + 6, 6, 'Дата протокола: ' + str(datetime.date.today().day) +'.' +str(datetime.date.today().month)+'.' +str(datetime.date.today().year))
 
         # сохранение данных в новый документ
         date_time = str(datetime.datetime.now()).replace(':', '')
+        ws.insert_bitmap('logo.bmp',1,7)
 
         wb.save(self.dest_folder + '\\' + date_time + '.xls')
         os.remove(xml_filename)

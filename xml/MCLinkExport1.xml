@@ -1,0 +1,173 @@
+<WeightSetCalibrationExport Generated="21.08.2017" Language="ru-RU">
+  <WeightSetCalibration StartDate="11.07.2017" EndDate="11.07.2017" CertificateNumber="D0002" LevelConfidence="0.995000000" CalibratedBy="- Default user">
+    <ContactOwner CustomerNumber="0002">
+      <Company>Тест Санкт Петербург</Company>
+      <Department>Лаборатория поверки мех средств</Department>
+      <CustomerName LastName="Петров " FirstName="Петр">Петр Петров </CustomerName>
+      <EMail>
+      </EMail>
+      <PhoneNumber>
+      </PhoneNumber>
+      <FaxNumber>
+      </FaxNumber>
+      <Address>Невский проспект</Address>
+      <City ZipCode="101102" State="Ленинградская" Country="Russia">Санкт-Петербург</City>
+    </ContactOwner>
+    <ContactBilling CustomerNumber="0002">
+      <Company>Тест Санкт Петербург</Company>
+      <Department>Лаборатория поверки мех средств</Department>
+      <CustomerName LastName="Петров " FirstName="Петр">Петр Петров </CustomerName>
+      <EMail>
+      </EMail>
+      <PhoneNumber>
+      </PhoneNumber>
+      <FaxNumber>
+      </FaxNumber>
+      <Address>Невский проспект</Address>
+      <City ZipCode="101102" State="Ленинградская" Country="Russia">Санкт-Петербург</City>
+    </ContactBilling>
+    <ContactDelivery CustomerNumber="0002">
+      <Company>Тест Санкт Петербург</Company>
+      <Department>Лаборатория поверки мех средств</Department>
+      <CustomerName LastName="Петров " FirstName="Петр">Петр Петров </CustomerName>
+      <EMail>
+      </EMail>
+      <PhoneNumber>
+      </PhoneNumber>
+      <FaxNumber>
+      </FaxNumber>
+      <Address>Невский проспект</Address>
+      <City ZipCode="101102" State="Ленинградская" Country="Russia">Санкт-Петербург</City>
+    </ContactDelivery>
+    <TestWeightSet SerialNumber="B238349675" Manufacturer="Mettler Toledo" InternalID="W002" AccuracyClass="OIML R111, F2" MassDefinition="Условная масса" NextCalibration="11.07.2018" Range="20g" CommonShape="С головкой" CommonAlloyMaterial="Stainless steel" CommonAlloyMaterialDensity="7950" CommonAlloyMaterialDensityUnit="kg/m3" CalibratedBy="- Default user">
+      <Comment>
+      </Comment>
+      <Description>
+      </Description>
+      <AlloyMaterials>
+        <AlloyMaterial RangeFrom="20g" RangeTo="20g" Density="7950" DensityUnit="kg/m3" DensityUncertainty="70" DensityUncertaintyUnit="kg/m3" Shape="С головкой">Stainless steel</AlloyMaterial>
+      </AlloyMaterials>
+      <TestWeightCalibrations Count="1">
+        <TestWeightCalibrationAsReturned Class="F2" PlusMinus="±">
+          <Nominal>20</Nominal>
+          <NominalUnit>g</NominalUnit>
+          <WeightID>F2002</WeightID>
+          <Density>7950</Density>
+          <DensityUnit>kg/m3</DensityUnit>
+          <DensityUncertainty>70</DensityUncertainty>
+          <DensityUncertaintyUnit>kg/m3</DensityUncertaintyUnit>
+          <Shape>С головкой</Shape>
+          <VolumeExpansionFactor>48</VolumeExpansionFactor>
+          <VolumeExpansionFactorUnit>ppm</VolumeExpansionFactorUnit>
+          <VolumeExpansionFactorUncertainty>3</VolumeExpansionFactorUncertainty>
+          <VolumeExpansionFactorUncertaintyUnit>ppm</VolumeExpansionFactorUncertaintyUnit>
+          <AlloyOrMaterial>Stainless steel</AlloyOrMaterial>
+          <CalibrationDate>11.07.2017</CalibrationDate>
+          <MassComparator>A</MassComparator>
+          <ReferenceWeight>a</ReferenceWeight>
+          <CheckStandard>
+          </CheckStandard>
+          <SensitivityWeight>
+          </SensitivityWeight>
+          <AirDensityCalculation>CIPM2007</AirDensityCalculation>
+          <Method>01</Method>
+          <User>- Default user</User>
+          <TrueMassCorrection>0.07</TrueMassCorrection>
+          <TrueMassCorrectionUnrounded>0.068870820</TrueMassCorrectionUnrounded>
+          <TrueMassCorrectionUnit>mg</TrueMassCorrectionUnit>
+          <TrueMass>20.00007</TrueMass>
+          <TrueMassUnit>g</TrueMassUnit>
+          <ConventionalMassCorrection>0.05</ConventionalMassCorrection>
+          <ConventionalMassCorrectionUnrounded>0.05000</ConventionalMassCorrectionUnrounded>
+          <ConventionalMassCorrectionUnit>mg</ConventionalMassCorrectionUnit>
+          <ConventionalMass>20.00005</ConventionalMass>
+          <ConventionalMassUnit>g</ConventionalMassUnit>
+          <MassVsBrassCorrection>-0.09</MassVsBrassCorrection>
+          <MassVsBrassCorrectionUnrounded>-0.089778887415521413161377</MassVsBrassCorrectionUnrounded>
+          <MassVsBrassCorrectionUnit>mg</MassVsBrassCorrectionUnit>
+          <MassVsBrass>19.99991</MassVsBrass>
+          <MassVsBrassUnit>g</MassVsBrassUnit>
+          <CombinedMassUncertainty>0.054</CombinedMassUncertainty>
+          <CombinedMassUncertaintyUnit>mg</CombinedMassUncertaintyUnit>
+          <ExpandedMassUncertainty>0.11</ExpandedMassUncertainty>
+          <ExpandedMassUncertaintyUnit>mg</ExpandedMassUncertaintyUnit>
+          <ExpansionFactor>2</ExpansionFactor>
+          <Tolerance>0.8</Tolerance>
+          <OneThirdTolerance>0.27</OneThirdTolerance>
+          <ToleranceUnit>mg</ToleranceUnit>
+          <CalibrationResult>Пройден</CalibrationResult>
+          <AirDensity>1.165630749</AirDensity>
+          <AirDensityUnit>kg/m3</AirDensityUnit>
+          <AirTemperature>23</AirTemperature>
+          <AirTemperatureUncertainty>
+          </AirTemperatureUncertainty>
+          <AirTemperatureUnit>°C</AirTemperatureUnit>
+          <AirTemperatureSensor Serialnumber="None" />
+          <AirPressure>997.24856</AirPressure>
+          <AirPressureUncertainty>
+          </AirPressureUncertainty>
+          <AirPressureUnit>hPa</AirPressureUnit>
+          <AirPressureSensor Serialnumber="None" />
+          <CO2>400</CO2>
+          <CO2Uncertainty>
+          </CO2Uncertainty>
+          <CO2Unit>ppm</CO2Unit>
+          <CO2Sensor Serialnumber="None" />
+          <Humidity>63</Humidity>
+          <HumidityUnit>%</HumidityUnit>
+          <HumidityUncertainty>
+          </HumidityUncertainty>
+          <HumiditySensor Serialnumber="None" />
+          <DewPoint>
+          </DewPoint>
+          <DewPointUnit>
+          </DewPointUnit>
+          <DewPointUncertainty>
+          </DewPointUncertainty>
+          <DewPointSensor Serialnumber="" />
+          <MeasurementReadings>
+            <WeightReading SeriesIndex="1" ProcessStepIndex="1" WeightInstruction="1" WeightReading="0.00" WeightReadingUnit="mg" Step="A" />
+            <WeightReading SeriesIndex="1" ProcessStepIndex="1" WeightInstruction="2" WeightReading="-0.01" WeightReadingUnit="mg" Step="B" />
+            <WeightReading SeriesIndex="1" ProcessStepIndex="1" WeightInstruction="3" WeightReading="-0.02" WeightReadingUnit="mg" Step="A" />
+            <WeightReading SeriesIndex="2" ProcessStepIndex="1" WeightInstruction="1" WeightReading="0.00" WeightReadingUnit="mg" Step="A" />
+            <WeightReading SeriesIndex="2" ProcessStepIndex="1" WeightInstruction="2" WeightReading="0.00" WeightReadingUnit="mg" Step="B" />
+            <WeightReading SeriesIndex="2" ProcessStepIndex="1" WeightInstruction="3" WeightReading="0.00" WeightReadingUnit="mg" Step="A" />
+          </MeasurementReadings>
+        </TestWeightCalibrationAsReturned>
+      </TestWeightCalibrations>
+    </TestWeightSet>
+    <EnvironmentalConditions>
+      <AirTemperature Min="23" Max="23" Average="23" Unit="°C" />
+      <AirPressure Min="997.24856" Max="997.24856" Average="997.24856" Unit="hPa" />
+      <Humidity Min="63" Max="63" Average="63" Unit="%" />
+      <CO2 Min="400" Max="400" Average="400" Unit="ppm" />
+      <AirDensity Calculations="CIPM2007">
+        <Min>1.165630749</Min>
+        <Max>1.165630749</Max>
+        <Average>1.165630749</Average>
+        <Unit>kg/m3</Unit>
+      </AirDensity>
+    </EnvironmentalConditions>
+    <Methods>
+      <Method Name="OIML R111-1 F2" Process="2x: ABA " Version="2.0" Index="01">OIML R111-1 F2</Method>
+    </Methods>
+    <ReferenceWeightSets>
+      <ReferenceWeightSet SerialNumber="B238300000" Class="F1" Range="20g" CommonAlloyMaterial="Stainless steel" CommonAlloyMaterialDensity="7950" CommonAlloyMaterialDensityUnit="kg/m3" CommonShape="С головкой" LastCalibrationDate="30.06.2017" CertificateNumber="C0016" NextCalibrationDate="11.07.2018">
+        <Comment>
+        </Comment>
+      </ReferenceWeightSet>
+    </ReferenceWeightSets>
+    <UsedReferenceWeightSets>B238300000</UsedReferenceWeightSets>
+    <ReferenceWeights>
+      <ReferenceWeight Index="a" SerialNumber="B238300000" NominalWeight="20" NominalWeightUnit="g" WeightId="W0005" Density="7950" DensityUnit="kg/m3" DensityUncertainty="70" DensityUncertaintyUnit="kg/m3" Class="F1" ConventionalMass="20.00005" ConventionalMassUnit="g" ConventionalMassError="0.05" ConventionalMassErrorUnit="mg" TrueMass="20.0000688708201237922705314" TrueMassUnit="g" TrueMassError="0.0688708201237922705314" TrueMassErrorUnit="mg" AirDensityAtCalibration="0" AirDensityAtCalibrationUnit="kg/m3" AirTemperatureAtCalibration="23" AirTemperatureUnitAtCalibration="°C" ExpandedMassErrorUncertainty="0.02" ExpandedMassErrorUncertaintyUnit="mg" CertificateNumber="C0016" PlusMinus="±" />
+    </ReferenceWeights>
+    <MassComparators>
+      <MassComparator Index="A" Model="XPE205CDR" Name="XPE205CDR" SerialNumber="B705644155" LastCalibrationDate="" NextCalibrationDate="21.08.2017" LastAdjustmentDate="12.07.2017" NextAdjustmentDate="13.07.2017">
+        <Comment>
+        </Comment>
+        <Description>
+        </Description>
+      </MassComparator>
+    </MassComparators>
+  </WeightSetCalibration>
+</WeightSetCalibrationExport>
