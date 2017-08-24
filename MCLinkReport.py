@@ -217,12 +217,25 @@ class DemonConvertation(Thread):
 
             # Определение метода
             Method = ''
+            StepSeriesIndex = ''
             for wr in WeightReading:
-                Method += wr.get('Step') + wr.get('SeriesIndex')
+                StepSeriesIndex += wr.get('Step') + wr.get('SeriesIndex')
+            if len(StepSeriesIndex) > 3:
+                # ABBA
+                if StepSeriesIndex[0:3] == 'A1B1B1A1':
+                    Method = 'ABBA'    
+                
+                # ABA
+                if StepSeriesIndex[0:3] == 'A1B1A1A2':
+                    Method = 'ABA'
 
-
-
-            # ABABAB
+                # ABABA
+                if StepSeriesIndex[0:3] == 'A1B1A2B2':
+                    Method = 'ABABA'
+            if len(StepSeriesIndex) == 3:
+                # ABA
+                if StepSeriesIndex[0:2] == 'A1B1A1':
+                    Method = 'ABA'
 
 
             # ABA
