@@ -17,7 +17,6 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QAction, QApplication, QFileDialog, QLabel, QCheckBox, QToolBar
 from xlutils.copy import copy as xlcopy
 
-
 class DemonConvertation(Thread):
     runing = False
     pathname = str(os.path.dirname(sys.argv[0])).replace('/','\\')
@@ -52,6 +51,7 @@ class DemonConvertation(Thread):
             self.conf.write(config)
         self.template_filename = template_filename
 
+    # Функция обновления настроек
     def update_settings(self):
         self.conf.read(self.config_filename)
         xml_folder = self.conf.get('path','xml')
