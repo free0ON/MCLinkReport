@@ -22,25 +22,49 @@ from xlutils.copy import copy as xlcopy
 class DemonConvertation(Thread):
     runing = False
     pathname = str(os.path.dirname(sys.argv[0])).replace('/','\\')
-    scan_folder = pathname
-    dest_folder = pathname
+    xml_folder = pathname
+    Excel_folder = pathname
     template_filename = pathname + '\\шаблон_новый.xls'
     autoopen = False
     def __init__(self):
         Thread.__init__(self)
+
+    def setXmlFolder(self, xml_folder):
         rb = xlrd.open_workbook(self.template_filename, formatting_info=True, on_demand=True)  # открываем книгу
-        rs = rb.get_sheet(1)
-        scan_folder = rs.cell(0,1)
-        dest_folder = rs.cell(1,1)
+        wb = xlcopy(rb)  # копируем книгу в память
+        ws = wb.sheet_by_index(1)
+        ws.write(1,1,xml_folder)
+        self.xml_folder = xml_folder
+        wb.save(self.template_filename)
+
+    def setExcelFolder(self, Excel_folder):
+        rb = xlrd.open_workbook(self.template_filename, formatting_info=True, on_demand=True)  # открываем книгу
+        wb = xlcopy(rb)  # копируем книгу в память
+        ws = wb.sheet_by_index(1)
+        ws.write(2,1, Excel_folder)
+        self.Excel_folder = Excel_folder
+        wb.save(self.template_filename)
 
     def run(self):
+        rb = xlrd.open_workbook(self.template_filename, formatting_info=True, on_demand=True)  # открываем книгу
+        rs = rb.sheet_by_index(1)
+        try:
+            xml_folder = rs.col_values(1,1)
+            Excel_folder = rs.col_values(2,1)
+            if xml_folder !='':
+                self.xml_folder = xml_folder
+            if Excel_folder != '':
+                self.Excel_folder = Excel_folder
+        except:
+            self.setXmlFolder(self.xml_folder)
+            self.setExcelFolder(self.Excel_folder)
         while self.runing:
-            file = os.listdir(self.scan_folder)
+            file = os.listdir(self.xml_folder)
             if len(file) != 0:
                 for i in file:
                     ext = i[-4:]
                     if ext== '.xml':
-                        self.convertation(self.scan_folder + '\\' + i)
+                        self.convertation(self.xml_folder + '\\' + i)
                         sleep(1)
             sleep(1)
 
@@ -326,10 +350,10 @@ class DemonConvertation(Thread):
         date_time = str(datetime.datetime.now()).replace(':', '')
         ws.insert_bitmap('logo.bmp',1,7)
 
-        wb.save(self.dest_folder + '\\' + date_time + '.xls')
+        wb.save(self.Excel_folder + '\\' + date_time + '.xls')
         os.remove(xml_filename)
         if self.autoopen == True:
-            os.startfile(self.dest_folder + '\\' + date_time + '.xls')
+            os.startfile(self.Excel_folder + '\\' + date_time + '.xls')
 
 class MainWindow(QMainWindow):
     demon = DemonConvertation
@@ -379,24 +403,24 @@ class MainWindow(QMainWindow):
         self.label1 = QLabel('Папка xml:', self)
         self.label1.move(10, 50)
         self.label1.resize(60, 20)
-        self.lbScanFolder = QLabel(self.demon.scan_folder, self)
+        self.lbScanFolder = QLabel(self.demon.xml_folder, self)
         self.lbScanFolder.move(80, 50)
         self.lbScanFolder.resize(500, 20)
         self.btScanFolder = QPushButton("...", self)
         self.btScanFolder.move(550, 50)
         self.btScanFolder.resize(30, 20)
-        self.btScanFolder.clicked.connect(self.selectScanFolder)
+        self.btScanFolder.clicked.connect(self.selectXmlFolder)
 
         self.label2 = QLabel('Папка Excel:', self)
         self.label2.move(10, 100)
         self.label2.resize(60, 20)
-        self.lbDestFolder = QLabel(self.demon.dest_folder, self)
+        self.lbDestFolder = QLabel(self.demon.Excel_folder, self)
         self.lbDestFolder.move(80, 100)
         self.lbDestFolder.resize(500, 20)
         self.btDestFolder = QPushButton("...", self)
         self.btDestFolder.move(550, 100)
         self.btDestFolder.resize(30, 20)
-        self.btDestFolder.clicked.connect(self.selectDestFolder)
+        self.btDestFolder.clicked.connect(self.selectExcelFolder)
 
         self.label3 = QLabel('Шаблон:',self)
         self.label3.move(10,150)
@@ -432,17 +456,19 @@ class MainWindow(QMainWindow):
         self.stopAction.setVisible(False)
         self.demon.runing = False
 
-    def selectScanFolder(self):
+    def selectXmlFolder(self):
         folder = QFileDialog.getExistingDirectory(self, 'Выберите исходный файл', '')
         if folder != '':
-            self.demon.scan_folder = str(folder).replace('/', '\\')
-            self.lbScanFolder.setText(self.demon.scan_folder)
+            folder = str(folder).replace('/', '\\')
+            self.demon.setXmlFolder(folder)
+            self.lbScanFolder.setText(self.demon.xml_folder)
 
-    def selectDestFolder(self):
+
+    def selectExcelFolder(self):
         folder = QFileDialog.getExistingDirectory(self, 'Выберите папку сохранения отчетов', '')
         if folder != '':
-            self.demon.dest_folder = str(folder).replace('/', '\\')
-            self.lbDestFolder.setText(self.demon.dest_folder)
+            self.demon.setExcelFolder(str(folder).replace('/', '\\'))
+            self.lbDestFolder.setText(self.demon.Excel_folder)
 
     def selectTemplate(self):
         template,ext = QFileDialog.getOpenFileName(self,'Выберите файл шаблона', self.demon.template_filename, '*.xls')
