@@ -7,6 +7,7 @@ import os
 import sys
 import xml.etree.ElementTree as etree
 
+
 from threading import Thread
 from time import sleep
 
@@ -23,11 +24,14 @@ class DemonConvertation(Thread):
     pathname = str(os.path.dirname(sys.argv[0])).replace('/','\\')
     scan_folder = pathname
     dest_folder = pathname
-    template_filename = 'шаблон_новый.xls'
+    template_filename = pathname + '\\шаблон_новый.xls'
     autoopen = False
-
     def __init__(self):
         Thread.__init__(self)
+        rb = xlrd.open_workbook(self.template_filename, formatting_info=True, on_demand=True)  # открываем книгу
+        rs = rb.get_sheet(1)
+        scan_folder = rs.cell(0,1)
+        dest_folder = rs.cell(1,1)
 
     def run(self):
         while self.runing:
@@ -220,26 +224,19 @@ class DemonConvertation(Thread):
             StepSeriesIndex = ''
             for wr in WeightReading:
                 StepSeriesIndex += wr.get('Step') + wr.get('SeriesIndex')
-            if len(StepSeriesIndex) > 3:
-                # ABBA
-                if StepSeriesIndex[0:3] == 'A1B1B1A1':
-                    Method = 'ABBA'    
-                
-                # ABA
-                if StepSeriesIndex[0:3] == 'A1B1A1A2':
-                    Method = 'ABA'
-
-                # ABABA
-                if StepSeriesIndex[0:3] == 'A1B1A2B2':
-                    Method = 'ABABA'
-            if len(StepSeriesIndex) == 3:
-                # ABA
-                if StepSeriesIndex[0:2] == 'A1B1A1':
-                    Method = 'ABA'
 
 
+
+            if StepSeriesIndex[0:5] == 'A1B1B1':
+                Method = 'ABBA'
+            if StepSeriesIndex[0:5] == 'A1B1A1':
+                Method = 'ABA'
+            if StepSeriesIndex[0:5] == '(A)1B1':
+                Method = 'ABA'
+
+            Method = StepSeriesIndex[0:6]
             # ABA
-            if ((len(WeightReading) % 3) == 0 ):  # 1 ABA
+            if Method == 'A1B1A1' or Method == '(A)1B1':  # 1 ABA
                 for cicle in range(int(len(WeightReading) / 3)):
                     for x in range(RowWeightReading, RowWeightReading + 3):
                         for y in range(2, 8):
@@ -265,7 +262,7 @@ class DemonConvertation(Thread):
                              styleCellLeftBottom)
                     RowWeightReading += 1
 
-            if ((len(WeightReading) % 4) == 0):  # 1 ABBA
+            if Method == 'A1B1B1':  # 1 ABBA
                 for cicle in range(int(len(WeightReading) / 4)):
                     for x in range(RowWeightReading, RowWeightReading + 4):
                         for y in range(2, 8):
