@@ -7,11 +7,10 @@ import os
 import sys
 import xml.etree.ElementTree as etree
 
-
 from threading import Thread
 from time import sleep
 
-
+import configparser
 import xlrd
 import xlwt
 from PyQt5.QtGui import QIcon
@@ -24,40 +23,49 @@ class DemonConvertation(Thread):
     pathname = str(os.path.dirname(sys.argv[0])).replace('/','\\')
     xml_folder = pathname
     Excel_folder = pathname
-    template_filename = pathname + '\\шаблон_новый.xls'
+    template_filename = pathname + '\\шаблон.xls'
     autoopen = False
+    config_filename = 'config.ini'
+    conf = configparser.RawConfigParser()
+
     def __init__(self):
         Thread.__init__(self)
 
     def setXmlFolder(self, xml_folder):
-        rb = xlrd.open_workbook(self.template_filename, formatting_info=True, on_demand=True)  # открываем книгу
-        wb = xlcopy(rb)  # копируем книгу в память
-        ws = wb.sheet_by_index(1)
-        ws.write(1,1,xml_folder)
+        self.conf.read(self.config_filename)
+        self.conf.set('path', 'xml', xml_folder)
+        with open(self.config_filename, "w") as config:
+            self.conf.write(config)
         self.xml_folder = xml_folder
-        wb.save(self.template_filename)
 
     def setExcelFolder(self, Excel_folder):
-        rb = xlrd.open_workbook(self.template_filename, formatting_info=True, on_demand=True)  # открываем книгу
-        wb = xlcopy(rb)  # копируем книгу в память
-        ws = wb.sheet_by_index(1)
-        ws.write(2,1, Excel_folder)
+        self.conf.read(self.config_filename)
+        self.conf.set('path', 'Excel', Excel_folder)
+        with open(self.config_filename, "w") as config:
+            self.conf.write(config)
         self.Excel_folder = Excel_folder
-        wb.save(self.template_filename)
+
+    def setTemplateFilename(self, template_filename):
+        self.conf.read(self.config_filename)
+        self.conf.set('path', 'Template', template_filename)
+        with open(self.config_filename, "w") as config:
+            self.conf.write(config)
+        self.template_filename = template_filename
+
+    def update_settings(self):
+        self.conf.read(self.config_filename)
+        xml_folder = self.conf.get('path','xml')
+        Excel_folder = self.conf.get('path','Excel')
+        template_filename = self.conf.get('path','Template')
+        if xml_folder != '':
+            self.xml_folder = str(xml_folder)
+        if Excel_folder != ':':
+            self.Excel_folder = str(Excel_folder)
+        if template_filename != '':
+            self.template_filename = str(template_filename)
 
     def run(self):
-        rb = xlrd.open_workbook(self.template_filename, formatting_info=True, on_demand=True)  # открываем книгу
-        rs = rb.sheet_by_index(1)
-        try:
-            xml_folder = rs.col_values(1,1)
-            Excel_folder = rs.col_values(2,1)
-            if xml_folder !='':
-                self.xml_folder = xml_folder
-            if Excel_folder != '':
-                self.Excel_folder = Excel_folder
-        except:
-            self.setXmlFolder(self.xml_folder)
-            self.setExcelFolder(self.Excel_folder)
+        self.update_settings()
         while self.runing:
             file = os.listdir(self.xml_folder)
             if len(file) != 0:
@@ -249,15 +257,6 @@ class DemonConvertation(Thread):
             for wr in WeightReading:
                 StepSeriesIndex += wr.get('Step') + wr.get('SeriesIndex')
 
-
-
-            if StepSeriesIndex[0:5] == 'A1B1B1':
-                Method = 'ABBA'
-            if StepSeriesIndex[0:5] == 'A1B1A1':
-                Method = 'ABA'
-            if StepSeriesIndex[0:5] == '(A)1B1':
-                Method = 'ABA'
-
             Method = StepSeriesIndex[0:6]
             # ABA
             if Method == 'A1B1A1' or Method == '(A)1B1':  # 1 ABA
@@ -377,7 +376,7 @@ class MainWindow(QMainWindow):
         self.initUI()
 
     def initUI(self):
-
+        self.demon.update_settings(self.demon)
         self.exitAction = QAction(QIcon('icons\\exit.png'), 'Выход', self)
         self.exitAction.setShortcut('Ctrl+Q')
         self.exitAction.setStatusTip('Выход')
@@ -443,6 +442,7 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon('icons\\fileopen.png'))
         self.show()
 
+
     def start(self):
         self.startAction.setVisible(False)
         self.stopAction.setVisible(True)
@@ -460,20 +460,22 @@ class MainWindow(QMainWindow):
         folder = QFileDialog.getExistingDirectory(self, 'Выберите исходный файл', '')
         if folder != '':
             folder = str(folder).replace('/', '\\')
-            self.demon.setXmlFolder(folder)
+            self.demon.setXmlFolder(self.demon,folder)
             self.lbScanFolder.setText(self.demon.xml_folder)
 
 
     def selectExcelFolder(self):
         folder = QFileDialog.getExistingDirectory(self, 'Выберите папку сохранения отчетов', '')
         if folder != '':
-            self.demon.setExcelFolder(str(folder).replace('/', '\\'))
+            folder = str(folder).replace('/', '\\')
+            self.demon.setExcelFolder(self.demon,folder)
             self.lbDestFolder.setText(self.demon.Excel_folder)
 
     def selectTemplate(self):
         template,ext = QFileDialog.getOpenFileName(self,'Выберите файл шаблона', self.demon.template_filename, '*.xls')
         if template != '':
-            self.demon.template_filename = str(template).replace('/', '\\')
+            template = str(template).replace('/','\\')
+            self.demon.setTemplateFilename(self.demon, template)
             self.lbTemplate.setText(self.demon.template_filename)
 
     def changeAutoOpen(self):
