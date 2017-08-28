@@ -6,10 +6,8 @@ import datetime
 import os
 import sys
 import xml.etree.ElementTree as etree
-
 from threading import Thread
 from time import sleep
-
 import configparser
 import xlrd
 import xlwt
@@ -18,17 +16,18 @@ from PyQt5.QtWidgets import QMainWindow, QPushButton, QAction, QApplication, QFi
 from xlutils.copy import copy as xlcopy
 
 class DemonConvertation(Thread):
-    runing = False
+    runing = bool
     pathname = str(os.path.dirname(sys.argv[0])).replace('/','\\')
     xml_folder = pathname
     Excel_folder = pathname
     template_filename = pathname + '\\шаблон.xls'
-    autoopen = False
+    autoopen = bool
     config_filename = 'config.ini'
     conf = configparser.RawConfigParser()
 
     def __init__(self):
         Thread.__init__(self)
+        self.update_settings()
 
     def setXmlFolder(self, xml_folder):
         self.conf.read(self.config_filename)
@@ -51,18 +50,42 @@ class DemonConvertation(Thread):
             self.conf.write(config)
         self.template_filename = template_filename
 
+    def setAutoOpen(self, set):
+        self.conf.read(self.config_filename)
+        self.conf.set('auto','autoopen',str(set))
+        with open(self.config_filename, "w") as config:
+            self.conf.write(config)
+        self.autoopen = set
+
+    def setAutoStart(self, set):
+        self.conf.read(self.config_filename)
+        self.conf.set('auto', 'autostart', str(set))
+        with open(self.config_filename, "w") as config:
+            self.conf.write(config)
+        self.runing = set
+
     # Функция обновления настроек
     def update_settings(self):
         self.conf.read(self.config_filename)
         xml_folder = self.conf.get('path','xml')
         Excel_folder = self.conf.get('path','Excel')
         template_filename = self.conf.get('path','Template')
+        autostart = self.conf.get('auto','autostart')
+        autoopen = self.conf.get('auto','autoopen')
         if xml_folder != '':
             self.xml_folder = str(xml_folder)
-        if Excel_folder != ':':
+        if Excel_folder != '':
             self.Excel_folder = str(Excel_folder)
         if template_filename != '':
             self.template_filename = str(template_filename)
+        if autostart == 'True':
+            self.runing = True
+        else:
+            self.runing = False
+        if autoopen == 'True':
+            self.autoopen = True
+        else:
+            self.autoopen = False
 
     def run(self):
         self.update_settings()
@@ -149,213 +172,421 @@ class DemonConvertation(Thread):
         TestWeightSet_Manufacturer =  TestWeightSet.get('Manufacturer')
         TestWeightSet_Range = TestWeightSet.get('Range')
         TestWeightCalibrationAsReturned = TestWeightCalibrations.findall('TestWeightCalibrationAsReturned')
+        TestWeightCalibrationAsFound = TestWeightCalibrations.findall('TestWeightCalibrationAsFound')
 
-        rb = xlrd.open_workbook(self.template_filename, formatting_info=True, on_demand=True)  # открываем книгу
-        # rs = rb.get_sheet(0)  # выбираем лист ?
+        # Есть положительные результаты AsReturned
+        if len(TestWeightCalibrationAsReturned) > 0:
 
-        wb = xlcopy(rb)  # копируем книгу в память
-        ws = wb.get_sheet(0)  # выбираем лист
+            rb = xlrd.open_workbook(self.template_filename, formatting_info=True, on_demand=True)  # открываем книгу
+            # rs = rb.get_sheet(0)  # выбираем лист ?
 
-        # стиль ячеки выравнивание по центру
-        styleCellCenter = xlwt.easyxf('border: top thin, left thin, bottom thin, right thin; align: horiz center')
-        # стиль ячейки выравнивание влево
-        styleCellLeft = xlwt.easyxf('border: top thin, left thin, bottom thin; align: horiz left')
-        styleCellLeftSinglCell = xlwt.easyxf(
-            'border: top thin, left thin, bottom thin, right thin; align: horiz left')
-        # styleCellCenterSinglCell = xlwt.easyxf('border: top thin, left thin, bottom thin, right thin; align: horiz center')
-        styleCellCenterSinglCellTop = xlwt.easyxf('border: top thin, left thin, right thin; align: horiz center')
-        styleCellTopLine = xlwt.easyxf('border: top thin')
-        styleCellLeftLine = xlwt.easyxf('border: left thin')
-        styleCellRightLine = xlwt.easyxf('border: right thin')
+            wb = xlcopy(rb)  # копируем книгу в память
+            ws = wb.get_sheet(0)  # выбираем лист
 
-        styleCellBorder = xlwt.easyxf('border: left thin, right thin')
+            # стиль ячеки выравнивание по центру
+            styleCellCenter = xlwt.easyxf('border: top thin, left thin, bottom thin, right thin; align: horiz center')
+            # стиль ячейки выравнивание влево
+            styleCellLeft = xlwt.easyxf('border: top thin, left thin, bottom thin; align: horiz left')
+            styleCellLeftSinglCell = xlwt.easyxf(
+                'border: top thin, left thin, bottom thin, right thin; align: horiz left')
+            # styleCellCenterSinglCell = xlwt.easyxf('border: top thin, left thin, bottom thin, right thin; align: horiz center')
+            styleCellCenterSinglCellTop = xlwt.easyxf('border: top thin, left thin, right thin; align: horiz center')
+            styleCellTopLine = xlwt.easyxf('border: top thin')
+            styleCellLeftLine = xlwt.easyxf('border: left thin')
+            styleCellRightLine = xlwt.easyxf('border: right thin')
 
-        styleCellLeftBottom = xlwt.easyxf('border: left thin, bottom thin, right thin; align: horiz left')
+            styleCellBorder = xlwt.easyxf('border: left thin, right thin')
 
-        if TestWeightCalibrations_Count == '1':
-            CI_Name = 'Гиря'
-        else:
-            CI_Name = 'Набор гирь'
+            styleCellLeftBottom = xlwt.easyxf('border: left thin, bottom thin, right thin; align: horiz left')
 
-        ws.write(1, 4, CertificateNumber)  # номер протокола
-        ws.write(2, 1, EndDate)  # дата поверки
-        ws.write(3, 1, CI_Name)  # наименование СИ
-        ws.write(2, 6, TestWeightSet_AccuracyClass)  # класс точности
-        ws.write(3, 6, TestWeightSet_Range) # номинальное заначение массы
-        ws.write(4, 6, TestWeightSet_SerialNumber)  # серийный номер
-        ws.write(4, 1, TestWeightSet_Description)  # год выпуска
-        ws.write(5, 1, Company_Name)  # название заказчика
-        ws.write(6, 1, CustomerNumber)  # номер заказчика
-        ws.write(7, 1, TestWeightSet_Manufacturer) # производитель гирь
-
-
-        ws.write(31, 2, AirTemperature_Min, styleCellCenter)
-        ws.write(32, 2, AirTemperature_Max, styleCellCenter)
-        ws.write(33, 2, AirTemperature_Avr, styleCellCenter)
-
-        ws.write(31, 4, Humidity_Min, styleCellCenter)
-        ws.write(32, 4, Humidity_Max, styleCellCenter)
-        ws.write(33, 4, Humidity_Avr, styleCellCenter)
-
-        ws.write(31, 6, AirPressure_Min, styleCellCenter)
-        ws.write(32, 6, AirPressure_Max, styleCellCenter)
-        ws.write(33, 6, AirPressure_Avr, styleCellCenter)
-
-        row = 37
-        for ref in ReferenceWeightSet:
-            # название набора гирь
-            ws.write(row, 0, 'Набор гирь', styleCellCenter)
-            ReferenceWeightSet_SerialNumber = ref.get('SerialNumber')
-            ws.write(row, 2, ReferenceWeightSet_SerialNumber, styleCellCenter)
-            ReferenceWeightSet_Class = ref.get('Class')
-            # класс точности набора
-            ws.write(row, 4, ReferenceWeightSet_Class, styleCellCenter)
-            row += 1
-
-        for comp in MassComparator:
-            # название компаратора
-            MassComparator_Model = comp.get('Model')
-            ws.write(row, 0, MassComparator_Model,styleCellCenter)
-            MassComparator_SerialNumber = comp.get('SerialNumber')
-            ws.write(row, 2, MassComparator_SerialNumber, styleCellCenter)
-            MassComparator_Description = comp.find('Description').text
-            # описание компаратора. В поле Описание (Description) должны быть записаны дискретность и СКО модели компаратора
-            ws.write(row, 4, MassComparator_Description, styleCellCenter)
-            row += 1
-
-        Row = 46
-        for i in TestWeightCalibrationAsReturned:
-            Nominal = i.find('Nominal').text
-            NominalUnit = i.find('NominalUnit').text
-            WeightID = i.find('WeightID').text
-            Index = i.find('ReferenceWeight').text
-            ReferenceWeight_ConventionalMassError = 0
-            Tolerance = i.find('Tolerance').text
-            for j in ReferenceWeight:
-                if Index == j.get('Index'):
-                    ReferenceWeight_ConventionalMassError = j.get('ConventionalMassError')
             if TestWeightCalibrations_Count == '1':
-                ws.write(Row, 0, str.strip(Nominal + NominalUnit), styleCellCenterSinglCellTop)
+                CI_Name = 'Гиря'
             else:
-                ws.write(Row, 0, str.strip(WeightID + Nominal + NominalUnit), styleCellCenterSinglCellTop)
-            ws.write(Row, 8, str(Tolerance), styleCellCenterSinglCellTop)
-            MeasurementReadings = i.find('MeasurementReadings')
-            WeightReading = MeasurementReadings.findall('WeightReading')
-            RowWeightReading = Row
+                CI_Name = 'Набор гирь'
 
-            A1 = []
-            A2 = []
-            B1 = []
-            B2 = []
-            Diff = []
-            Avr = 0
-            WeightReadingUnit = 0
+            ws.write(1, 4, CertificateNumber)  # номер протокола
+            ws.write(2, 1, EndDate)  # дата поверки
+            ws.write(3, 1, CI_Name)  # наименование СИ
+            ws.write(2, 6, TestWeightSet_AccuracyClass)  # класс точности
+            ws.write(3, 6, TestWeightSet_Range) # номинальное заначение массы
+            ws.write(4, 6, TestWeightSet_SerialNumber)  # серийный номер
+            ws.write(4, 1, TestWeightSet_Description)  # год выпуска
+            ws.write(5, 1, Company_Name)  # название заказчика
+            ws.write(6, 1, CustomerNumber)  # номер заказчика
+            ws.write(7, 1, TestWeightSet_Manufacturer) # производитель гирь
 
-            # Определение метода
-            Method = ''
-            StepSeriesIndex = ''
-            for wr in WeightReading:
-                StepSeriesIndex += wr.get('Step') + wr.get('SeriesIndex')
 
-            Method = StepSeriesIndex[0:6]
-            # ABA
-            if Method == 'A1B1A1' or Method == '(A)1B1':  # 1 ABA
-                for cicle in range(int(len(WeightReading) / 3)):
-                    for x in range(RowWeightReading, RowWeightReading + 3):
-                        for y in range(2, 8):
-                            ws.write(x, y, '', styleCellBorder)
-                    A1.append(WeightReading[cicle].get('WeightReading'))
-                    WeightReadingUnit = WeightReading[cicle].get('WeightReadingUnit')
-                    ws.write(RowWeightReading, 1, str(cicle + 1) + ' A1 ' + A1[cicle] + WeightReadingUnit,
-                             styleCellLeftSinglCell)
-                    RowWeightReading += 1
-                    B1.append(WeightReading[cicle + 1].get('WeightReading'))
-                    ws.write(RowWeightReading, 1, str(cicle + 1) + ' B1 ' + B1[cicle] + WeightReadingUnit,
-                             styleCellLeftSinglCell)
-                    RowWeightReading += 1
-                    A2.append(WeightReading[cicle + 2].get('WeightReading'))
-                    ws.write(RowWeightReading, 1, str(cicle + 1) + ' A2 ' + A2[cicle] + WeightReadingUnit,
-                             styleCellLeftSinglCell)
-                    A1[cicle] = float(A1[cicle].replace(',', '.'))
-                    B1[cicle] = float(B1[cicle].replace(',', '.'))
-                    A2[cicle] = float(A2[cicle].replace(',', '.'))
-                    Diff.append(round(B1[cicle] - (A1[cicle] + A2[cicle]) / 2, 4))
-                    Avr += Diff[cicle]
-                    ws.write(RowWeightReading, 2, str(Diff[cicle]).replace('.', ',') + WeightReadingUnit,
-                             styleCellLeftBottom)
-                    RowWeightReading += 1
+            ws.write(31, 2, AirTemperature_Min, styleCellCenter)
+            ws.write(32, 2, AirTemperature_Max, styleCellCenter)
+            ws.write(33, 2, AirTemperature_Avr, styleCellCenter)
 
-            if Method == 'A1B1B1':  # 1 ABBA
-                for cicle in range(int(len(WeightReading) / 4)):
-                    for x in range(RowWeightReading, RowWeightReading + 4):
-                        for y in range(2, 8):
-                            ws.write(x, y, '', styleCellBorder)
-                    A1.append(WeightReading[cicle].get('WeightReading'))
-                    WeightReadingUnit = WeightReading[0].get('WeightReadingUnit')
-                    ws.write(RowWeightReading, 1, str(cicle + 1) + ' A1 ' + A1[cicle] + WeightReadingUnit,
-                             styleCellLeftSinglCell)
-                    RowWeightReading += 1
-                    B1.append(WeightReading[cicle + 1].get('WeightReading'))
-                    ws.write(RowWeightReading, 1, str(cicle + 1) + ' B1 ' + B1[cicle] + WeightReadingUnit,
-                             styleCellLeftSinglCell)
-                    RowWeightReading += 1
-                    B2.append(WeightReading[cicle + 2].get('WeightReading'))
-                    ws.write(RowWeightReading, 1, str(cicle + 1) + ' B2 ' + B2[cicle] + WeightReadingUnit,
-                             styleCellLeftSinglCell)
-                    RowWeightReading += 1
-                    A2.append(WeightReading[cicle + 3].get('WeightReading'))
-                    ws.write(RowWeightReading, 1, str(cicle + 1) + ' A2 ' + A2[cicle] + WeightReadingUnit,
-                             styleCellLeftSinglCell)
-                    A1[cicle] = float(A1[cicle].replace(',', '.'))
-                    B1[cicle] = float(B1[cicle].replace(',', '.'))
-                    B2[cicle] = float(B2[cicle].replace(',', '.'))
-                    A2[cicle] = float(A2[cicle].replace(',', '.'))
-                    Diff.append(round((B1[cicle] + B2[cicle]) / 2 - (A1[cicle] + A2[cicle]) / 2, 4))
-                    Avr += Diff[cicle]
-                    ws.write(RowWeightReading, 2, str(Diff[cicle]).replace('.', ',') + WeightReadingUnit,
-                             styleCellLeftBottom)
-                    RowWeightReading += 1
+            ws.write(31, 4, Humidity_Min, styleCellCenter)
+            ws.write(32, 4, Humidity_Max, styleCellCenter)
+            ws.write(33, 4, Humidity_Avr, styleCellCenter)
 
-            Avr = str(round(Avr / len(Diff), 4)).replace('.', ',')
+            ws.write(31, 6, AirPressure_Min, styleCellCenter)
+            ws.write(32, 6, AirPressure_Max, styleCellCenter)
+            ws.write(33, 6, AirPressure_Avr, styleCellCenter)
 
-            ConventionalMassCorrection = i.find('ConventionalMassCorrection').text
-            ConventionalMassCorrectionUnit = i.find('ConventionalMassCorrectionUnit').text
-            ConventionalMass = i.find('ConventionalMass').text
-            ConventionalMassUnit = i.find('ConventionalMassUnit').text
-            ExpandedMassUncertainty = i.find('ExpandedMassUncertainty').text
-            ExpandedMassUncertaintyUnit = i.find('ExpandedMassUncertaintyUnit').text
-            ws.write(Row, 3, Avr + WeightReadingUnit, styleCellCenterSinglCellTop)
-            ws.write(Row, 4, ReferenceWeight_ConventionalMassError + ConventionalMassCorrectionUnit,
-                     styleCellCenterSinglCellTop)
-            ws.write(Row, 5, ConventionalMassCorrection + ConventionalMassCorrectionUnit,
-                     styleCellCenterSinglCellTop)
-            ws.write(Row, 6, ConventionalMass + ConventionalMassUnit, styleCellCenterSinglCellTop)
-            ws.write(Row, 7, ExpandedMassUncertainty + ExpandedMassUncertaintyUnit, styleCellCenterSinglCellTop)
-            for x in range(Row + 1, Row + len(WeightReading)):
-                ws.write(x, 0, '', styleCellLeftLine)
-                ws.write(x, 8, '', styleCellRightLine)
-            Row = RowWeightReading
+            row = 37
+            for ref in ReferenceWeightSet:
+                # название набора гирь
+                ws.write(row, 0, 'Набор гирь', styleCellCenter)
+                ReferenceWeightSet_SerialNumber = ref.get('SerialNumber')
+                ws.write(row, 2, ReferenceWeightSet_SerialNumber, styleCellCenter)
+                ReferenceWeightSet_Class = ref.get('Class')
+                # класс точности набора
+                ws.write(row, 4, ReferenceWeightSet_Class, styleCellCenter)
+                row += 1
 
-        for y in range(0, 9):
-            ws.write(Row, y, '', styleCellTopLine)
+            for comp in MassComparator:
+                # название компаратора
+                MassComparator_Model = comp.get('Model')
+                ws.write(row, 0, MassComparator_Model,styleCellCenter)
+                MassComparator_SerialNumber = comp.get('SerialNumber')
+                ws.write(row, 2, MassComparator_SerialNumber, styleCellCenter)
+                MassComparator_Description = comp.find('Description').text
+                # описание компаратора. В поле Описание (Description) должны быть записаны дискретность и СКО модели компаратора
+                ws.write(row, 4, MassComparator_Description, styleCellCenter)
+                row += 1
+            Row = 46
+            for i in TestWeightCalibrationAsReturned:
+                Nominal = i.find('Nominal').text
+                NominalUnit = i.find('NominalUnit').text
+                WeightID = i.find('WeightID').text
+                Index = i.find('ReferenceWeight').text
+                ReferenceWeight_ConventionalMassError = 0
+                Tolerance = i.find('Tolerance').text
+                for j in ReferenceWeight:
+                    if Index == j.get('Index'):
+                        ReferenceWeight_ConventionalMassError = j.get('ConventionalMassError')
+                if TestWeightCalibrations_Count == '1':
+                    ws.write(Row, 0, str.strip(Nominal + NominalUnit), styleCellCenterSinglCellTop)
+                else:
+                    ws.write(Row, 0, str.strip(WeightID + Nominal + NominalUnit), styleCellCenterSinglCellTop)
+                ws.write(Row, 8, str(Tolerance), styleCellCenterSinglCellTop)
+                MeasurementReadings = i.find('MeasurementReadings')
+                WeightReading = MeasurementReadings.findall('WeightReading')
+                RowWeightReading = Row
 
-        ws.write(Row + 2, 0, 'Заключение по результатам поверки:')
-        ws.write(Row + 3, 0, 'На основании результатов поверки выдано свидетельство о поверке №')
+                A1 = []
+                A2 = []
+                B1 = []
+                B2 = []
+                Diff = []
+                Avr = 0
+                WeightReadingUnit = 0
 
-        ws.write(Row + 6, 0, 'Поверитель:_____________________ ' + CalibratedBy)
-        ws.write(Row + 6, 6, 'Дата протокола: ' + str(datetime.date.today().day) +'.' +str(datetime.date.today().month)+'.' +str(datetime.date.today().year))
+                # Определение метода
+                Method = ''
+                StepSeriesIndex = ''
+                for wr in WeightReading:
+                    StepSeriesIndex += wr.get('Step') + wr.get('SeriesIndex')
 
-        # сохранение данных в новый документ
-        date_time = str(datetime.datetime.now()).replace(':', '')
-        ws.insert_bitmap('logo.bmp',1,7)
+                Method = StepSeriesIndex[0:6]
+                # ABA
+                if Method == 'A1B1A1' or Method == '(A)1B1':  # 1 ABA
+                    for cicle in range(int(len(WeightReading) / 3)):
+                        for x in range(RowWeightReading, RowWeightReading + 3):
+                            for y in range(2, 8):
+                                ws.write(x, y, '', styleCellBorder)
+                        A1.append(WeightReading[cicle].get('WeightReading'))
+                        WeightReadingUnit = WeightReading[cicle].get('WeightReadingUnit')
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A1 ' + A1[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        RowWeightReading += 1
+                        B1.append(WeightReading[cicle + 1].get('WeightReading'))
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' B1 ' + B1[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        RowWeightReading += 1
+                        A2.append(WeightReading[cicle + 2].get('WeightReading'))
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A2 ' + A2[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        A1[cicle] = float(A1[cicle].replace(',', '.'))
+                        B1[cicle] = float(B1[cicle].replace(',', '.'))
+                        A2[cicle] = float(A2[cicle].replace(',', '.'))
+                        Diff.append(round(B1[cicle] - (A1[cicle] + A2[cicle]) / 2, 4))
+                        Avr += Diff[cicle]
+                        ws.write(RowWeightReading, 2, str(Diff[cicle]).replace('.', ',') + WeightReadingUnit,
+                                 styleCellLeftBottom)
+                        RowWeightReading += 1
 
-        wb.save(self.Excel_folder + '\\' + date_time + '.xls')
+                if Method == 'A1B1B1':  # 1 ABBA
+                    for cicle in range(int(len(WeightReading) / 4)):
+                        for x in range(RowWeightReading, RowWeightReading + 4):
+                            for y in range(2, 8):
+                                ws.write(x, y, '', styleCellBorder)
+                        A1.append(WeightReading[cicle].get('WeightReading'))
+                        WeightReadingUnit = WeightReading[0].get('WeightReadingUnit')
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A1 ' + A1[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        RowWeightReading += 1
+                        B1.append(WeightReading[cicle + 1].get('WeightReading'))
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' B1 ' + B1[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        RowWeightReading += 1
+                        B2.append(WeightReading[cicle + 2].get('WeightReading'))
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' B2 ' + B2[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        RowWeightReading += 1
+                        A2.append(WeightReading[cicle + 3].get('WeightReading'))
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A2 ' + A2[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        A1[cicle] = float(A1[cicle].replace(',', '.'))
+                        B1[cicle] = float(B1[cicle].replace(',', '.'))
+                        B2[cicle] = float(B2[cicle].replace(',', '.'))
+                        A2[cicle] = float(A2[cicle].replace(',', '.'))
+                        Diff.append(round((B1[cicle] + B2[cicle]) / 2 - (A1[cicle] + A2[cicle]) / 2, 4))
+                        Avr += Diff[cicle]
+                        ws.write(RowWeightReading, 2, str(Diff[cicle]).replace('.', ',') + WeightReadingUnit,
+                                 styleCellLeftBottom)
+                        RowWeightReading += 1
+
+                Avr = str(round(Avr / len(Diff), 4)).replace('.', ',')
+
+                ConventionalMassCorrection = i.find('ConventionalMassCorrection').text
+                ConventionalMassCorrectionUnit = i.find('ConventionalMassCorrectionUnit').text
+                ConventionalMass = i.find('ConventionalMass').text
+                ConventionalMassUnit = i.find('ConventionalMassUnit').text
+                ExpandedMassUncertainty = i.find('ExpandedMassUncertainty').text
+                ExpandedMassUncertaintyUnit = i.find('ExpandedMassUncertaintyUnit').text
+                ws.write(Row, 3, Avr + WeightReadingUnit, styleCellCenterSinglCellTop)
+                ws.write(Row, 4, ReferenceWeight_ConventionalMassError + ConventionalMassCorrectionUnit,
+                         styleCellCenterSinglCellTop)
+                ws.write(Row, 5, ConventionalMassCorrection + ConventionalMassCorrectionUnit,
+                         styleCellCenterSinglCellTop)
+                ws.write(Row, 6, ConventionalMass + ConventionalMassUnit, styleCellCenterSinglCellTop)
+                ws.write(Row, 7, ExpandedMassUncertainty + ExpandedMassUncertaintyUnit, styleCellCenterSinglCellTop)
+                for x in range(Row + 1, Row + len(WeightReading)):
+                    ws.write(x, 0, '', styleCellLeftLine)
+                    ws.write(x, 8, '', styleCellRightLine)
+                Row = RowWeightReading
+
+            for y in range(0, 9):
+                ws.write(Row, y, '', styleCellTopLine)
+
+            ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири пригодны к использованию по  классу точности ' + TestWeightSet_AccuracyClass + ' согласно ГОСТ OIML R111-1-2009')
+            ws.write(Row + 3, 0, 'На основании результатов поверки выдано свидетельство о поверке № _____ от ___.___.______г.')
+
+            ws.write(Row + 6, 0, 'Поверитель:_____________________ ' + CalibratedBy)
+            ws.write(Row + 6, 6, 'Дата протокола: ' + str(datetime.date.today().day) +'.' +str(datetime.date.today().month)+'.' +str(datetime.date.today().year))
+
+            # сохранение данных в новый документ
+            date_time = str(datetime.datetime.now()).replace(':', '')
+            ws.insert_bitmap('logo.bmp',1,7)
+
+            wb.save(self.Excel_folder + '\\' + date_time + '.xls')
+            if self.autoopen == True:
+                os.startfile(self.Excel_folder + '\\' + date_time + '.xls')
+        # Есть отрицательные результаты AsFound
+        if len(TestWeightCalibrationAsFound) > 0:
+            rb = xlrd.open_workbook(self.template_filename, formatting_info=True, on_demand=True)  # открываем книгу
+            # rs = rb.get_sheet(0)  # выбираем лист ?
+
+            wb = xlcopy(rb)  # копируем книгу в память
+            ws = wb.get_sheet(0)  # выбираем лист
+
+            # стиль ячеки выравнивание по центру
+            styleCellCenter = xlwt.easyxf('border: top thin, left thin, bottom thin, right thin; align: horiz center')
+            # стиль ячейки выравнивание влево
+            styleCellLeft = xlwt.easyxf('border: top thin, left thin, bottom thin; align: horiz left')
+            styleCellLeftSinglCell = xlwt.easyxf(
+                'border: top thin, left thin, bottom thin, right thin; align: horiz left')
+            # styleCellCenterSinglCell = xlwt.easyxf('border: top thin, left thin, bottom thin, right thin; align: horiz center')
+            styleCellCenterSinglCellTop = xlwt.easyxf('border: top thin, left thin, right thin; align: horiz center')
+            styleCellTopLine = xlwt.easyxf('border: top thin')
+            styleCellLeftLine = xlwt.easyxf('border: left thin')
+            styleCellRightLine = xlwt.easyxf('border: right thin')
+
+            styleCellBorder = xlwt.easyxf('border: left thin, right thin')
+
+            styleCellLeftBottom = xlwt.easyxf('border: left thin, bottom thin, right thin; align: horiz left')
+
+            if TestWeightCalibrations_Count == '1':
+                CI_Name = 'Гиря'
+            else:
+                CI_Name = 'Набор гирь'
+
+            ws.write(1, 4, CertificateNumber)  # номер протокола
+            ws.write(2, 1, EndDate)  # дата поверки
+            ws.write(3, 1, CI_Name)  # наименование СИ
+            ws.write(2, 6, TestWeightSet_AccuracyClass)  # класс точности
+            ws.write(3, 6, TestWeightSet_Range)  # номинальное заначение массы
+            ws.write(4, 6, TestWeightSet_SerialNumber)  # серийный номер
+            ws.write(4, 1, TestWeightSet_Description)  # год выпуска
+            ws.write(5, 1, Company_Name)  # название заказчика
+            ws.write(6, 1, CustomerNumber)  # номер заказчика
+            ws.write(7, 1, TestWeightSet_Manufacturer)  # производитель гирь
+
+            ws.write(31, 2, AirTemperature_Min, styleCellCenter)
+            ws.write(32, 2, AirTemperature_Max, styleCellCenter)
+            ws.write(33, 2, AirTemperature_Avr, styleCellCenter)
+
+            ws.write(31, 4, Humidity_Min, styleCellCenter)
+            ws.write(32, 4, Humidity_Max, styleCellCenter)
+            ws.write(33, 4, Humidity_Avr, styleCellCenter)
+
+            ws.write(31, 6, AirPressure_Min, styleCellCenter)
+            ws.write(32, 6, AirPressure_Max, styleCellCenter)
+            ws.write(33, 6, AirPressure_Avr, styleCellCenter)
+
+            row = 37
+            for ref in ReferenceWeightSet:
+                # название набора гирь
+                ws.write(row, 0, 'Набор гирь', styleCellCenter)
+                ReferenceWeightSet_SerialNumber = ref.get('SerialNumber')
+                ws.write(row, 2, ReferenceWeightSet_SerialNumber, styleCellCenter)
+                ReferenceWeightSet_Class = ref.get('Class')
+                # класс точности набора
+                ws.write(row, 4, ReferenceWeightSet_Class, styleCellCenter)
+                row += 1
+
+            for comp in MassComparator:
+                # название компаратора
+                MassComparator_Model = comp.get('Model')
+                ws.write(row, 0, MassComparator_Model, styleCellCenter)
+                MassComparator_SerialNumber = comp.get('SerialNumber')
+                ws.write(row, 2, MassComparator_SerialNumber, styleCellCenter)
+                MassComparator_Description = comp.find('Description').text
+                # описание компаратора. В поле Описание (Description) должны быть записаны дискретность и СКО модели компаратора
+                ws.write(row, 4, MassComparator_Description, styleCellCenter)
+                row += 1
+
+            Row = 46
+            for i in TestWeightCalibrationAsFound:
+                Nominal = i.find('Nominal').text
+                NominalUnit = i.find('NominalUnit').text
+                WeightID = i.find('WeightID').text
+                Index = i.find('ReferenceWeight').text
+                ReferenceWeight_ConventionalMassError = 0
+                Tolerance = i.find('Tolerance').text
+                for j in ReferenceWeight:
+                    if Index == j.get('Index'):
+                        ReferenceWeight_ConventionalMassError = j.get('ConventionalMassError')
+                if TestWeightCalibrations_Count == '1':
+                    ws.write(Row, 0, str.strip(Nominal + NominalUnit), styleCellCenterSinglCellTop)
+                else:
+                    ws.write(Row, 0, str.strip(WeightID + Nominal + NominalUnit), styleCellCenterSinglCellTop)
+                ws.write(Row, 8, str(Tolerance), styleCellCenterSinglCellTop)
+                MeasurementReadings = i.find('MeasurementReadings')
+                WeightReading = MeasurementReadings.findall('WeightReading')
+                RowWeightReading = Row
+
+                A1 = []
+                A2 = []
+                B1 = []
+                B2 = []
+                Diff = []
+                Avr = 0
+                WeightReadingUnit = 0
+
+                # Определение метода
+                Method = ''
+                StepSeriesIndex = ''
+                for wr in WeightReading:
+                    StepSeriesIndex += wr.get('Step') + wr.get('SeriesIndex')
+
+                Method = StepSeriesIndex[0:6]
+                # ABA
+                if Method == 'A1B1A1' or Method == '(A)1B1':  # 1 ABA
+                    for cicle in range(int(len(WeightReading) / 3)):
+                        for x in range(RowWeightReading, RowWeightReading + 3):
+                            for y in range(2, 8):
+                                ws.write(x, y, '', styleCellBorder)
+                        A1.append(WeightReading[cicle].get('WeightReading'))
+                        WeightReadingUnit = WeightReading[cicle].get('WeightReadingUnit')
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A1 ' + A1[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        RowWeightReading += 1
+                        B1.append(WeightReading[cicle + 1].get('WeightReading'))
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' B1 ' + B1[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        RowWeightReading += 1
+                        A2.append(WeightReading[cicle + 2].get('WeightReading'))
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A2 ' + A2[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        A1[cicle] = float(A1[cicle].replace(',', '.'))
+                        B1[cicle] = float(B1[cicle].replace(',', '.'))
+                        A2[cicle] = float(A2[cicle].replace(',', '.'))
+                        Diff.append(round(B1[cicle] - (A1[cicle] + A2[cicle]) / 2, 4))
+                        Avr += Diff[cicle]
+                        ws.write(RowWeightReading, 2, str(Diff[cicle]).replace('.', ',') + WeightReadingUnit,
+                                 styleCellLeftBottom)
+                        RowWeightReading += 1
+
+                if Method == 'A1B1B1':  # 1 ABBA
+                    for cicle in range(int(len(WeightReading) / 4)):
+                        for x in range(RowWeightReading, RowWeightReading + 4):
+                            for y in range(2, 8):
+                                ws.write(x, y, '', styleCellBorder)
+                        A1.append(WeightReading[cicle].get('WeightReading'))
+                        WeightReadingUnit = WeightReading[0].get('WeightReadingUnit')
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A1 ' + A1[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        RowWeightReading += 1
+                        B1.append(WeightReading[cicle + 1].get('WeightReading'))
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' B1 ' + B1[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        RowWeightReading += 1
+                        B2.append(WeightReading[cicle + 2].get('WeightReading'))
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' B2 ' + B2[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        RowWeightReading += 1
+                        A2.append(WeightReading[cicle + 3].get('WeightReading'))
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A2 ' + A2[cicle] + WeightReadingUnit,
+                                 styleCellLeftSinglCell)
+                        A1[cicle] = float(A1[cicle].replace(',', '.'))
+                        B1[cicle] = float(B1[cicle].replace(',', '.'))
+                        B2[cicle] = float(B2[cicle].replace(',', '.'))
+                        A2[cicle] = float(A2[cicle].replace(',', '.'))
+                        Diff.append(round((B1[cicle] + B2[cicle]) / 2 - (A1[cicle] + A2[cicle]) / 2, 4))
+                        Avr += Diff[cicle]
+                        ws.write(RowWeightReading, 2, str(Diff[cicle]).replace('.', ',') + WeightReadingUnit,
+                                 styleCellLeftBottom)
+                        RowWeightReading += 1
+
+                Avr = str(round(Avr / len(Diff), 4)).replace('.', ',')
+
+                ConventionalMassCorrection = i.find('ConventionalMassCorrection').text
+                ConventionalMassCorrectionUnit = i.find('ConventionalMassCorrectionUnit').text
+                ConventionalMass = i.find('ConventionalMass').text
+                ConventionalMassUnit = i.find('ConventionalMassUnit').text
+                ExpandedMassUncertainty = i.find('ExpandedMassUncertainty').text
+                ExpandedMassUncertaintyUnit = i.find('ExpandedMassUncertaintyUnit').text
+                ws.write(Row, 3, Avr + WeightReadingUnit, styleCellCenterSinglCellTop)
+                ws.write(Row, 4, ReferenceWeight_ConventionalMassError + ConventionalMassCorrectionUnit,
+                         styleCellCenterSinglCellTop)
+                ws.write(Row, 5, ConventionalMassCorrection + ConventionalMassCorrectionUnit,
+                         styleCellCenterSinglCellTop)
+                ws.write(Row, 6, ConventionalMass + ConventionalMassUnit, styleCellCenterSinglCellTop)
+                ws.write(Row, 7, ExpandedMassUncertainty + ExpandedMassUncertaintyUnit, styleCellCenterSinglCellTop)
+                for x in range(Row + 1, Row + len(WeightReading)):
+                    ws.write(x, 0, '', styleCellLeftLine)
+                    ws.write(x, 8, '', styleCellRightLine)
+                Row = RowWeightReading
+
+            for y in range(0, 9):
+                ws.write(Row, y, '', styleCellTopLine)
+
+            ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири не годны к использованию по классу точности '+TestWeightSet_AccuracyClass+' согласно ГОСТ OIML R111-1-2009')
+            ws.write(Row + 3, 0, 'На основании результатов поверки выдано извещение о непригодности № _____ от ___.___.______г.')
+
+            ws.write(Row + 6, 0, 'Поверитель:_____________________ ' + CalibratedBy)
+            ws.write(Row + 6, 6, 'Дата протокола: ' + str(datetime.date.today().day) + '.' + str(
+                datetime.date.today().month) + '.' + str(datetime.date.today().year))
+
+            # сохранение данных в новый документ
+            date_time = str(datetime.datetime.now()).replace(':', '')
+            ws.insert_bitmap('logo.bmp', 1, 7)
+
+            wb.save(self.Excel_folder + '\\Извещение_' + date_time + '.xls')
+            if self.autoopen == True:
+                os.startfile(self.Excel_folder + '\\Извещение_' + date_time + '.xls')
+        # Удаляем исходный файл xml
         os.remove(xml_filename)
-        if self.autoopen == True:
-            os.startfile(self.Excel_folder + '\\' + date_time + '.xls')
 
 class MainWindow(QMainWindow):
-    demon = DemonConvertation
+    demon = DemonConvertation()
     startAction = QAction
     stopAction = QAction
     exitAction = QAction
@@ -376,7 +607,8 @@ class MainWindow(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.demon.update_settings(self.demon)
+        self.demon.update_settings()
+
         self.exitAction = QAction(QIcon('icons\\exit.png'), 'Выход', self)
         self.exitAction.setShortcut('Ctrl+Q')
         self.exitAction.setStatusTip('Выход')
@@ -435,26 +667,30 @@ class MainWindow(QMainWindow):
         self.chbAutoOpen = QCheckBox('Автооткрытие протокола', self)
         self.chbAutoOpen.move(10, 200)
         self.chbAutoOpen.resize(200, 30)
+        self.chbAutoOpen.setChecked(self.demon.autoopen)
         self.chbAutoOpen.clicked.connect(self.changeAutoOpen)
         self.statusBar()
         self.setGeometry(500, 300, 600, 250)
         self.setWindowTitle('Сохранение протоколов поверки')
         self.setWindowIcon(QIcon('icons\\fileopen.png'))
         self.show()
+        if self.demon.runing == True:
+            self.start()
+
 
 
     def start(self):
         self.startAction.setVisible(False)
         self.stopAction.setVisible(True)
         self.demon = DemonConvertation()
-        self.demon.runing = True
+        self.demon.setAutoStart(True)
         self.demon.setDaemon(True)
         self.demon.start()
 
     def stop(self):
         self.startAction.setVisible(True)
         self.stopAction.setVisible(False)
-        self.demon.runing = False
+        self.demon.setAutoStart(False)
 
     def selectXmlFolder(self):
         folder = QFileDialog.getExistingDirectory(self, 'Выберите исходный файл', '')
@@ -462,7 +698,6 @@ class MainWindow(QMainWindow):
             folder = str(folder).replace('/', '\\')
             self.demon.setXmlFolder(self.demon,folder)
             self.lbScanFolder.setText(self.demon.xml_folder)
-
 
     def selectExcelFolder(self):
         folder = QFileDialog.getExistingDirectory(self, 'Выберите папку сохранения отчетов', '')
@@ -480,10 +715,9 @@ class MainWindow(QMainWindow):
 
     def changeAutoOpen(self):
         if self.chbAutoOpen.isChecked() == True:
-            self.demon.autoopen = True
+            self.demon.setAutoOpen(True)
         else:
-            self.demon.autoopen = False
-
+            self.demon.setAutoOpen(False)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
