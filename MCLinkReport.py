@@ -681,8 +681,6 @@ class MainWindow(QMainWindow):
         if self.demon.runing == True:
             self.start()
 
-
-
     def start(self):
         self.startAction.setVisible(False)
         self.stopAction.setVisible(True)
