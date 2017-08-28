@@ -700,21 +700,21 @@ class MainWindow(QMainWindow):
         folder = QFileDialog.getExistingDirectory(self, 'Выберите исходный файл', '')
         if folder != '':
             folder = str(folder).replace('/', '\\')
-            self.demon.setXmlFolder(self.demon,folder)
+            self.demon.setXmlFolder(folder)
             self.lbScanFolder.setText(self.demon.xml_folder)
 
     def selectExcelFolder(self):
         folder = QFileDialog.getExistingDirectory(self, 'Выберите папку сохранения отчетов', '')
         if folder != '':
             folder = str(folder).replace('/', '\\')
-            self.demon.setExcelFolder(self.demon,folder)
+            self.demon.setExcelFolder(folder)
             self.lbDestFolder.setText(self.demon.Excel_folder)
 
     def selectTemplate(self):
         template,ext = QFileDialog.getOpenFileName(self,'Выберите файл шаблона', self.demon.template_filename, '*.xls')
         if template != '':
             template = str(template).replace('/','\\')
-            self.demon.setTemplateFilename(self.demon, template)
+            self.demon.setTemplateFilename(template)
             self.lbTemplate.setText(self.demon.template_filename)
 
     def changeAutoOpen(self):
