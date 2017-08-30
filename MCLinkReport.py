@@ -210,9 +210,16 @@ class DemonConvertation(Thread):
         TestWeightCalibrationAsReturned = TestWeightCalibrations.findall('TestWeightCalibrationAsReturned')
         TestWeightCalibrationAsFound = TestWeightCalibrations.findall('TestWeightCalibrationAsFound')
 
+        Test_Passed = True
+
         if len(TestWeightCalibrationAsFound) > 0:
             for found in TestWeightCalibrationAsFound:
-                TestWeightCalibrationAsReturned.append(found)
+                Nominal = float(str(found.find('Nominal').text).replace(',','.'))
+                Error = float(str(found.find('ConventionalMassCorrection').text).replace(',','.'))
+                if abs(Error) < 0.1*Nominal*1000:
+                    TestWeightCalibrationAsReturned.append(found)
+                else:
+                    Test_Passed = False
 
         # Есть положительные результаты AsReturned
         if len(TestWeightCalibrationAsReturned) > 0:
@@ -410,11 +417,11 @@ class DemonConvertation(Thread):
             for y in range(0, 9):
                 ws.write(Row, y, '', styleCellTopLine)
 
-            if len(TestWeightCalibrationAsFound) == 0:
+            if Test_Passed:
                 ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири пригодны к использованию по  классу точности ' + TestWeightSet_AccuracyClass + ' согласно ГОСТ OIML R111-1-2009')
                 ws.write(Row + 3, 0, 'На основании результатов поверки выдано свидетельство о поверке № _____ от ___.___.______г.')
             else:
-                ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири не годны к использованию по классу точности '+TestWeightSet_AccuracyClass+' согласно ГОСТ OIML R111-1-2009')
+                ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири не пригодны к использованию по классу точности '+TestWeightSet_AccuracyClass+' согласно ГОСТ OIML R111-1-2009')
                 ws.write(Row + 3, 0, 'На основании результатов поверки выдано извещение о непригодности № _____ от ___.___.______г.')
 
             ws.write(Row + 6, 0, 'Поверитель:_____________________ ' + CalibratedBy)
