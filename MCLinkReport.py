@@ -19,6 +19,8 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QAction, QApplication, QFileDialog, QLabel, QCheckBox, QToolBar
 from xlutils.copy import copy as xlcopy
 
+Title = "Сохранение протоколов поверки MCLink v1.3"
+
 class DemonConvertation(Thread):
     runing = bool
     pathname = str(os.path.dirname(sys.argv[0])).replace('/','\\')
@@ -217,8 +219,9 @@ class DemonConvertation(Thread):
             for found in TestWeightCalibrationAsFound:
                 Nominal = float(str(found.find('Nominal').text).replace(',','.'))
                 Error = float(str(found.find('ConventionalMassCorrection').text).replace(',','.'))
-                if abs(Error) < 0.1*Nominal*1000:
+                if abs(Error) < 0.1*Nominal/1000:
                     TestWeightCalibrationAsReturned.append(found)
+                    Test_Passed = True
                 else:
                     Test_Passed = False
 
@@ -430,7 +433,7 @@ class DemonConvertation(Thread):
 
             # сохранение данных в новый документ
             date_time = str(datetime.datetime.now()).replace(':', '')
-            date_time = date_time[0:len(date_time) - 9]
+            date_time = date_time[0:len(date_time) - 5]
             ws.insert_bitmap('logo.bmp',1,7)
             file_to_save = self.rightFileName(Company_Name + ' ' + TestWeightSet_AccuracyClass + ' '+ TestWeightSet_SerialNumber +' ' + date_time + '.xls')
             wb.save(self.Excel_folder + '\\'+file_to_save)
@@ -462,6 +465,8 @@ class MainWindow(QMainWindow):
 
     def initUI(self):
         self.demon.update_settings()
+
+        #TODO: Иконка помощь
 
         self.exitAction = QAction(QIcon('icons\\exit.png'), 'Выход', self)
         self.exitAction.setShortcut('Ctrl+Q')
@@ -498,7 +503,7 @@ class MainWindow(QMainWindow):
 
         self.label2 = QLabel('Папка Excel:', self)
         self.label2.move(10, 100)
-        self.label2.resize(60, 20)
+        self.label2.resize(70, 20)
         self.lbDestFolder = QLabel(self.demon.Excel_folder, self)
         self.lbDestFolder.move(80, 100)
         self.lbDestFolder.resize(500, 20)
@@ -525,7 +530,7 @@ class MainWindow(QMainWindow):
         self.chbAutoOpen.clicked.connect(self.changeAutoOpen)
         self.statusBar()
         self.setGeometry(500, 300, 600, 250)
-        self.setWindowTitle('Сохранение протоколов поверки')
+        self.setWindowTitle(Title)
         self.setWindowIcon(QIcon('icons\\fileopen.png'))
         self.show()
         if self.demon.runing == True:
