@@ -176,18 +176,18 @@ class DemonConvertation(Thread):
         AirDensity_Avr = self.roundStr(AirDensity.find('Average').text,4)
 
 
-        AirTemperature_Min = AirTemperature.get('Min')  # температура мин
-        AirTemperature_Max = AirTemperature.get('Max')  # температура макс
+        AirTemperature_Min = self.roundStr(AirTemperature.get('Min'),2)  # температура мин
+        AirTemperature_Max = self.roundStr(AirTemperature.get('Max'),2)  # температура макс
         AirTemperature_Avr = self.roundStr(AirTemperature.get('Average'),2)  # температура средняя
         # AirTemperature_Unit = AirTemperature.get('Unit')  # размерность температуры
 
-        AirPressure_Min = AirPressure.get('Min')  # давление мин
-        AirPressure_Max = AirPressure.get('Max')  # давление макс
+        AirPressure_Min = self.roundStr(AirPressure.get('Min'),2)  # давление мин
+        AirPressure_Max = self.roundStr(AirPressure.get('Max'),2)  # давление макс
         AirPressure_Avr = self.roundStr(AirPressure.get('Average'), 2)  # давление среднее
         # AirPressure_Unit = AirPressure.get('Unit')  # размерность давления
 
-        Humidity_Min = Humidity.get('Min')  # влажность мин
-        Humidity_Max = Humidity.get('Max')  # влажность макс
+        Humidity_Min = self.roundStr(Humidity.get('Min'),2)  # влажность мин
+        Humidity_Max = self.roundStr(Humidity.get('Max'),2)  # влажность макс
         Humidity_Avr = self.roundStr(Humidity.get('Average'), 2)  # влажность средняя
 
         # Humidity_Unit = Humidity.get('Unit')  # размерность влажности
@@ -212,18 +212,21 @@ class DemonConvertation(Thread):
         TestWeightSet_Range = TestWeightSet.get('Range')
         TestWeightCalibrationAsReturned = TestWeightCalibrations.findall('TestWeightCalibrationAsReturned')
         TestWeightCalibrationAsFound = TestWeightCalibrations.findall('TestWeightCalibrationAsFound')
-
+        TestWeightSet_AlloyMaterials = TestWeightSet.find('AlloyMaterials')
+        TestWeightSet_AlloyMaterial = TestWeightSet_AlloyMaterials.findall('AlloyMaterial')[0]
+        Density = TestWeightSet_AlloyMaterial.get('Density') + TestWeightSet_AlloyMaterial.get('DensityUnit')
         Test_Passed = True
 
         if len(TestWeightCalibrationAsFound) > 0:
             for found in TestWeightCalibrationAsFound:
                 Nominal = float(str(found.find('Nominal').text).replace(',','.'))
                 Error = float(str(found.find('ConventionalMassCorrection').text).replace(',','.'))
-                if abs(Error) < 0.1*Nominal/1000:
+                Tolerance =  float(str(found.find('Tolerance').text).replace(',','.'))
+                if abs(Error) < 0.1*Nominal*1000 and abs(Error) > Tolerance:
                     TestWeightCalibrationAsReturned.append(found)
-                    Test_Passed = True
-                else:
                     Test_Passed = False
+                else:
+                    Test_Passed = True
 
         # Есть положительные результаты AsReturned
         if len(TestWeightCalibrationAsReturned) > 0:
@@ -266,6 +269,7 @@ class DemonConvertation(Thread):
             ws.write(6, 1, CustomerNumber)  # номер заказчика
             ws.write(7, 1, TestWeightSet_Manufacturer) # производитель гирь
 
+            ws.write(14, 2, Density)
 
             ws.write(31, 1, AirTemperature_Min, styleCellCenter)
             ws.write(32, 1, AirTemperature_Max, styleCellCenter)
@@ -436,6 +440,9 @@ class DemonConvertation(Thread):
             date_time = date_time[0:len(date_time) - 5]
             ws.insert_bitmap('logo.bmp',1,7)
             file_to_save = self.rightFileName(Company_Name + ' ' + TestWeightSet_AccuracyClass + ' '+ TestWeightSet_SerialNumber +' ' + date_time + '.xls')
+            file_to_save = self.rightFileName(file_to_save)
+            file_to_save = self.rightFileName(file_to_save)
+            file_to_save = self.rightFileName(file_to_save)
             wb.save(self.Excel_folder + '\\'+file_to_save)
             if self.autoopen == True:
                 os.startfile(self.Excel_folder + '\\' + file_to_save)
