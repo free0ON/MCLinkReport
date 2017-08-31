@@ -19,7 +19,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QAction, QApplication, QFileDialog, QLabel, QCheckBox, QToolBar
 from xlutils.copy import copy as xlcopy
 
-Title = "Сохранение протоколов поверки MCLink v1.3"
+Title = "Сохранение протоколов поверки MCLink v1.4"
 
 class DemonConvertation(Thread):
     runing = bool
@@ -112,18 +112,19 @@ class DemonConvertation(Thread):
         return str(_str).replace('.',',')
 
     def rightFileName(self, _str):
-        _str = _str.replace('#', ' ')
-        _str = _str.replace('&', ' ')
-        _str = _str.replace(':', ' ')
-        _str = _str.replace('<', ' ')
-        _str = _str.replace('>', ' ')
-        _str = _str.replace('?', ' ')
-        _str = _str.replace('/', ' ')
-        _str = _str.replace('\\', ' ')
-        _str = _str.replace('\"', ' ')
-        _str = _str.replace('|', ' ')
-        _str = _str.replace('*', ' ')
-        _str = _str.replace('&', ' ')
+        _str = _str.replace('#', '',200)
+        _str = _str.replace('&', '',200)
+        _str = _str.replace(':', '',200)
+        _str = _str.replace('<', '',200)
+        _str = _str.replace('>', '',200)
+        _str = _str.replace('?', '',200)
+        _str = _str.replace('/', '',200)
+        _str = _str.replace('\\', '',200)
+        _str = _str.replace('\"', '',200)
+        _str = _str.replace('|', '',200)
+        _str = _str.replace('*', '',200)
+        _str = _str.replace('&', '',200)
+        _str = _str.replace('\n','',200)
         return _str
 
     def convertation(self, xml_filename=None):
@@ -133,8 +134,8 @@ class DemonConvertation(Thread):
 
         WeightSetCalibration = root.find('WeightSetCalibration')
         ContactOwner = WeightSetCalibration.find('ContactOwner')
-        Company = ContactOwner.find('Company')
-        Department = ContactOwner.find('Department')
+        Company = str(ContactOwner.find('Company').text).strip(' ')
+        Department = str(ContactOwner.find('Department').text).strip(' ')
 
         City = ContactOwner.find('City')
 
@@ -166,9 +167,9 @@ class DemonConvertation(Thread):
         CalibratedBy = WeightSetCalibration.get('CalibratedBy')  # поверитель
         CustomerNumber = ContactOwner.get('CustomerNumber')  # ИНН
         if Department == 0:
-            Company_Name = Company.text  # назвение заказчика
+            Company_Name = Company  # назвение заказчика
         else:
-            Company_Name = Company.text + ' ' + Department.text
+            Company_Name = Company + ' ' + Department
 
         # Address = City.get('ZipCode') + ', ' + City.get('State') + ', ' + ContactOwner.find('Address').text  # адрес
         AirDensity_Min = self.roundStr(AirDensity.find('Min').text,4)
@@ -427,22 +428,19 @@ class DemonConvertation(Thread):
 
             if Test_Passed:
                 ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири пригодны к использованию по  классу точности ' + TestWeightSet_AccuracyClass + ' согласно ГОСТ OIML R111-1-2009')
-                ws.write(Row + 3, 0, 'На основании результатов поверки выдано свидетельство о поверке № _____ от ___.___.______г.')
+                ws.write(Row + 3, 0, 'На основании результатов поверки выдано свидетельство о поверке № _______________ от ___.__________.______г.')
             else:
                 ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири не пригодны к использованию по классу точности '+TestWeightSet_AccuracyClass+' согласно ГОСТ OIML R111-1-2009')
-                ws.write(Row + 3, 0, 'На основании результатов поверки выдано извещение о непригодности № _____ от ___.___.______г.')
+                ws.write(Row + 3, 0, 'На основании результатов поверки выдано извещение о непригодности № _______________ от ___.__________.______г.')
 
             ws.write(Row + 6, 0, 'Поверитель:_____________________ ' + CalibratedBy)
             ws.write(Row + 6, 6, 'Дата протокола: ' + str(datetime.date.today().day) +'.' +str(datetime.date.today().month)+'.' +str(datetime.date.today().year))
 
             # сохранение данных в новый документ
             date_time = str(datetime.datetime.now()).replace(':', '')
-            date_time = date_time[0:len(date_time) - 5]
+            date_time = str(date_time).replace('.', '_')
             ws.insert_bitmap('logo.bmp',1,7)
             file_to_save = self.rightFileName(Company_Name + ' ' + TestWeightSet_AccuracyClass + ' '+ TestWeightSet_SerialNumber +' ' + date_time + '.xls')
-            file_to_save = self.rightFileName(file_to_save)
-            file_to_save = self.rightFileName(file_to_save)
-            file_to_save = self.rightFileName(file_to_save)
             wb.save(self.Excel_folder + '\\'+file_to_save)
             if self.autoopen == True:
                 os.startfile(self.Excel_folder + '\\' + file_to_save)

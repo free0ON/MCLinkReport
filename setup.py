@@ -8,8 +8,8 @@ target = Executable (
 
 setup(
     name = "MCLinkReport",
-    version = "1.3",
+    version = "1.4",
     description = "Программа для автоматического создания отчетов MCLink",
-    executables = [target]
+    executables = [Executable("MCLinkReport.py")]
 
 )
