@@ -1,5 +1,5 @@
 '''
-v1.4
+v1.5 на tkinter
 Программа конвертации отчетов программы MCLink в формате xml в формат xls
 Автооткрытие
 Автозапуск
@@ -16,9 +16,9 @@ import configparser
 
 import xlrd
 import xlwt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QAction, QApplication, QFileDialog, QLabel, QCheckBox, QToolBar
 from xlutils.copy import copy as xlcopy
+from tkinter import *
+from tkinter.filedialog import *
 
 Title = "Сохранение протоколов поверки MCLink v1.4"
 
@@ -448,144 +448,90 @@ class DemonConvertation(Thread):
         # Удаляем исходный файл xml
         os.remove(xml_filename)
 
-class MainWindow(QMainWindow):
-    demon = DemonConvertation()
-    startAction = QAction
-    stopAction = QAction
-    exitAction = QAction
-    toolbar = QToolBar
-    label1 = QLabel
-    label2 = QLabel
-    label3 = QLabel
-    lbScanFolder = QLabel
-    lbDestFolder = QLabel
-    lbTemplate = QLabel
-    btScanFolder = QPushButton
-    btDestFolder = QPushButton
-    btTemplate = QPushButton
-    chbAutoOpen = QCheckBox
-
-    def __init__(self):
-        super().__init__()
-        self.initUI()
-
-    def initUI(self):
-        self.demon.update_settings()
-
-        #TODO: Иконка помощь
-
-        self.exitAction = QAction(QIcon('icons\\exit.png'), 'Выход', self)
-        self.exitAction.setShortcut('Ctrl+Q')
-        self.exitAction.setStatusTip('Выход')
-        self.exitAction.triggered.connect(self.close)
-
-        self.startAction = QAction(QIcon('icons\\player_play.png'), 'Запуск', self)
-        self.startAction.setShortcut('Ctrl+C')
-        self.startAction.setStatusTip('Запуск автосохранения')
-        self.startAction.triggered.connect(self.start)
-        self.startAction.setVisible(True)
-
-        self.stopAction = QAction(QIcon('icons\\player_stop.png'), 'Остановка', self)
-        self.stopAction.setShortcut('Ctrl+S')
-        self.stopAction.setStatusTip('Остановка автосохранения')
-        self.stopAction.triggered.connect(self.stop)
-        self.stopAction.setVisible(False)
-
-        self.toolbar = self.addToolBar('Tools')
-        self.toolbar.addAction(self.exitAction)
-        self.toolbar.addAction(self.startAction)
-        self.toolbar.addAction(self.stopAction)
-
-        self.label1 = QLabel('Папка xml:', self)
-        self.label1.move(10, 50)
-        self.label1.resize(60, 20)
-        self.lbScanFolder = QLabel(self.demon.xml_folder, self)
-        self.lbScanFolder.move(80, 50)
-        self.lbScanFolder.resize(500, 20)
-        self.btScanFolder = QPushButton("...", self)
-        self.btScanFolder.move(550, 50)
-        self.btScanFolder.resize(30, 20)
-        self.btScanFolder.clicked.connect(self.selectXmlFolder)
-
-        self.label2 = QLabel('Папка Excel:', self)
-        self.label2.move(10, 100)
-        self.label2.resize(70, 20)
-        self.lbDestFolder = QLabel(self.demon.Excel_folder, self)
-        self.lbDestFolder.move(80, 100)
-        self.lbDestFolder.resize(500, 20)
-        self.btDestFolder = QPushButton("...", self)
-        self.btDestFolder.move(550, 100)
-        self.btDestFolder.resize(30, 20)
-        self.btDestFolder.clicked.connect(self.selectExcelFolder)
-
-        self.label3 = QLabel('Шаблон:',self)
-        self.label3.move(10,150)
-        self.label3.resize(60,20)
-        self.lbTemplate = QLabel(self.demon.template_filename, self)
-        self.lbTemplate.move(80,150)
-        self.lbTemplate.resize(500,20)
-        self.btTemplate = QPushButton('...',self)
-        self.btTemplate.move(550,150)
-        self.btTemplate.resize(30,20)
-        self.btTemplate.clicked.connect(self.selectTemplate)
-
-        self.chbAutoOpen = QCheckBox('Автооткрытие протокола', self)
-        self.chbAutoOpen.move(10, 200)
-        self.chbAutoOpen.resize(200, 30)
-        self.chbAutoOpen.setChecked(self.demon.autoopen)
-        self.chbAutoOpen.clicked.connect(self.changeAutoOpen)
-        self.statusBar()
-        self.setGeometry(500, 300, 600, 250)
-        self.setWindowTitle(Title)
-        self.setWindowIcon(QIcon('icons\\fileopen.png'))
-        self.show()
-        if self.demon.runing == True:
-            self.start()
-
-    def start(self):
-        self.startAction.setVisible(False)
-        self.stopAction.setVisible(True)
-        self.demon = DemonConvertation()
-        self.demon.setAutoStart(True)
-        self.demon.setDaemon(True)
-        self.demon.start()
-
-    def stop(self):
-        self.startAction.setVisible(True)
-        self.stopAction.setVisible(False)
-        self.demon.setAutoStart(False)
-
+# # класс главного окна
+class MainForm:
+    #demon = DemonConvertation
+    #lbXmlFolder = Label()
     def selectXmlFolder(self):
-        folder = QFileDialog.getExistingDirectory(self, 'Выберите исходный файл', '')
+        folder = askdirectory()
         if folder != '':
             folder = str(folder).replace('/', '\\')
             self.demon.setXmlFolder(folder)
-            self.lbScanFolder.setText(self.demon.xml_folder)
+            self.lbXmlFolder["text"] = folder
 
     def selectExcelFolder(self):
-        folder = QFileDialog.getExistingDirectory(self, 'Выберите папку сохранения отчетов', '')
+        folder = askdirectory()
         if folder != '':
             folder = str(folder).replace('/', '\\')
             self.demon.setExcelFolder(folder)
-            self.lbDestFolder.setText(self.demon.Excel_folder)
+            self.lbExcelFolder["text"] = folder
 
-    def selectTemplate(self):
-        template,ext = QFileDialog.getOpenFileName(self,'Выберите файл шаблона', self.demon.template_filename, '*.xls')
-        if template != '':
-            template = str(template).replace('/','\\')
-            self.demon.setTemplateFilename(template)
-            self.lbTemplate.setText(self.demon.template_filename)
+    def close(self):
+        exit()
 
-    def changeAutoOpen(self):
-        if self.chbAutoOpen.isChecked() == True:
+    def start(self):
+        self.demon = DemonConvertation()
+        self.demon.setAutoStart(True)
+        self.demon.setDaemon(True)
+        self.btStart['state'] = 'disabled'
+        self.btStop['state'] = 'active'
+        self.demon.start()
+
+    def stop(self):
+        self.demon.setAutoStart(False)
+        self.btStart['state'] = 'active'
+        self.btStop['state'] = 'disabled'
+
+
+    def change(self):
+        if self.autoopen.get() == 1:
             self.demon.setAutoOpen(True)
         else:
             self.demon.setAutoOpen(False)
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = MainWindow()
-    sys.exit(app.exec_())
 
+    def __init__(self, master):
+        self.demon = DemonConvertation()
+        self.imgExit = Image
+        self.master = master
+        self.master.title(Title)
+        self.master.geometry('600x200')
+        self.imgExit = PhotoImage(file="icons\\exit.png")
+        self.btQuit = Button(self.master, image = self.imgExit, command = self.close)
+        self.btQuit.place(x=10, y=10, width=30, height=30)
 
+        self.imgStart = PhotoImage(file="icons\\player_play.png")
+        self.btStart = Button(self.master, image=self.imgStart, command = self.start)
+        self.btStart.place(x=40, y=10, width=30, height=30)
+        self.imgStop = PhotoImage(file="icons\\player_stop.png")
+        self.btStop = Button(self.master, image=self.imgStop, command = self.stop, state = 'disabled')
+        self.btStop.place(x=70, y=10, width=30, height=30)
 
+        if self.demon.runing == True:
+            self.btStart['state'] = 'disabled'
+            self.btStop['state'] = 'active'
+
+        self.lbXmlFolder = Label(self.master, text='Папка xml: ' + self.demon.xml_folder)
+        self.lbXmlFolder.place(x=10, y=50, width=500, height=20)
+
+        self.lbExcelFolder = Label(self.master, text='Папка Excel: ' + self.demon.Excel_folder)
+        self.lbExcelFolder.place(x=10, y=100, width=500, height=20)
+
+        self.btXmlFolder = Button(self.master, text='...', command = self.selectXmlFolder)
+        self.btXmlFolder.place(x=550, y=50,width=30, height=20)
+        self.btExcelFolder = Button(self.master, text='...',command = self.selectExcelFolder)
+        self.btExcelFolder.place(x=550, y=100, width=30, height=20)
+        self.autoopen = IntVar()
+
+        self.chbAutoOpen = Checkbutton(self.master, text='Автооткрытие протокола', variable=self.autoopen, onvalue=1, offvalue=0, command =self.change)
+        if self.demon.autoopen == True:
+            self.chbAutoOpen.select()
+        self.chbAutoOpen.place(x=10, y=150, width=200, height=30)
+
+        self.master.mainloop()
+
+# создание окна
+root = Tk()
+
+# запуск окна
+MainForm(root)
