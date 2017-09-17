@@ -20,7 +20,7 @@ from xlutils.copy import copy as xlcopy
 from tkinter import *
 from tkinter.filedialog import *
 
-Title = "Сохранение протоколов поверки MCLink v1.4"
+Title = "Сохранение протоколов поверки MCLink v1.5"
 
 class DemonConvertation(Thread):
     runing = bool
