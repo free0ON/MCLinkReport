@@ -1,10 +1,11 @@
 '''
-v1.5 на tkinter
+v1.6 на tkinter
 Программа конвертации отчетов программы MCLink в формате xml в формат xls
 Автооткрытие
 Автозапуск
 Сохранение настроек
 Ошибки в результатах
+Протокол AsFound и AsReturn 
 '''
 import datetime
 import os
@@ -20,7 +21,7 @@ from xlutils.copy import copy as xlcopy
 from tkinter import *
 from tkinter.filedialog import *
 
-Title = "Сохранение протоколов поверки MCLink v1.4"
+Title = "Сохранение протоколов поверки MCLink v1.6"
 
 class DemonConvertation(Thread):
     runing = bool
@@ -227,7 +228,8 @@ class DemonConvertation(Thread):
                 if abs(Error) < 0.1*Nominal*1000 and abs(Error) > Tolerance:
                     TestWeightCalibrationAsReturned.append(found)
                     Test_Passed = False
-                else:
+                elif abs(Error) <= Tolerance:
+                    TestWeightCalibrationAsReturned.append(found)
                     Test_Passed = True
 
         # Есть положительные результаты AsReturned
