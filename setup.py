@@ -6,14 +6,14 @@ os.environ['TK_LIBRARY'] = r'C:\Programs\Python\tcl\tk8.6'
 base = 'Win32GUI'
 
 target = Executable (
-    script = "MCLinkReport_tkinter.py",
+    script = "MCLinkReport.py",
     base = "Win32GUI",
     icon = "icon.ico"
 )
 
 setup(
     name = "MCLinkReport",
-    version = "1.4",
+    version = "1.6",
     description = "Программа для автоматического создания отчетов MCLink",
     options = {"build_exe":  {"includes": ["tkinter"]}},
     executables = [target]

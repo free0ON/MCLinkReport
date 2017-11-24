@@ -1,6 +1,9 @@
 '''
-v1.6 на tkinter
+v1.7 на tkinter
 Программа конвертации отчетов программы MCLink в формате xml в формат xls
+Проблема с округлением
+Убрал размерность
+---
 Автооткрытие
 Автозапуск
 Сохранение настроек
@@ -21,7 +24,9 @@ from xlutils.copy import copy as xlcopy
 from tkinter import *
 from tkinter.filedialog import *
 
-Title = "Сохранение протоколов поверки MCLink v1.6"
+CSM = 'КрасЦСМ'
+
+Title = CSM + ". Сохранение протоколов поверки MCLink v1.7"
 
 class DemonConvertation(Thread):
     runing = bool
@@ -220,14 +225,17 @@ class DemonConvertation(Thread):
         Density = TestWeightSet_AlloyMaterial.get('Density') + TestWeightSet_AlloyMaterial.get('DensityUnit')
         Test_Passed = True
 
+        # Есть отрицательные результаты или ошибочно записанные AsFound
         if len(TestWeightCalibrationAsFound) > 0:
             for found in TestWeightCalibrationAsFound:
                 Nominal = float(str(found.find('Nominal').text).replace(',','.'))
                 Error = float(str(found.find('ConventionalMassCorrection').text).replace(',','.'))
                 Tolerance =  float(str(found.find('Tolerance').text).replace(',','.'))
+                # Отрицательный результат
                 if abs(Error) < 0.1*Nominal*1000 and abs(Error) > Tolerance:
                     TestWeightCalibrationAsReturned.append(found)
                     Test_Passed = False
+                # Ошибочно записанный положительный результат
                 elif abs(Error) <= Tolerance:
                     TestWeightCalibrationAsReturned.append(found)
                     Test_Passed = True
@@ -262,7 +270,9 @@ class DemonConvertation(Thread):
             else:
                 CI_Name = 'Набор гирь'
 
-            ws.write(1, 4, CertificateNumber)  # номер протокола
+            # КрасЦСМ номер протокола не печатаем
+            if CSM != "КрасЦСМ":
+                ws.write(1, 4, CertificateNumber)  # номер протокола
             ws.write(2, 1, EndDate)  # дата поверки
             ws.write(3, 1, CI_Name)  # наименование СИ
             ws.write(2, 6, TestWeightSet_AccuracyClass)  # класс точности
@@ -291,7 +301,7 @@ class DemonConvertation(Thread):
             ws.write(32, 7, AirDensity_Max, styleCellCenter)
             ws.write(33, 7, AirDensity_Avr, styleCellCenter)
 
-
+            # TODO: НАстройки в шаблон
             row = 37
             for ref in ReferenceWeightSet:
                 # название набора гирь
@@ -313,6 +323,7 @@ class DemonConvertation(Thread):
                 # описание компаратора. В поле Описание (Description) должны быть записаны дискретность и СКО модели компаратора
                 ws.write(row, 4, MassComparator_Description, styleCellCenter)
                 row += 1
+            # TODO: Настройки в шаблон
             Row = 46
             for i in TestWeightCalibrationAsReturned:
                 Nominal = i.find('Nominal').text
@@ -356,22 +367,22 @@ class DemonConvertation(Thread):
                                 ws.write(x, y, '', styleCellBorder)
                         A1.append(WeightReading[cicle*3].get('WeightReading'))
                         WeightReadingUnit = WeightReading[cicle].get('WeightReadingUnit')
-                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A1 ' + A1[cicle] + WeightReadingUnit,
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A1 ' + A1[cicle],
                                  styleCellLeftSinglCell)
                         RowWeightReading += 1
                         B1.append(WeightReading[cicle*3 + 1].get('WeightReading'))
-                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' B1 ' + B1[cicle] + WeightReadingUnit,
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' B1 ' + B1[cicle],
                                  styleCellLeftSinglCell)
                         RowWeightReading += 1
                         A2.append(WeightReading[cicle*3 + 2].get('WeightReading'))
-                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A2 ' + A2[cicle] + WeightReadingUnit,
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A2 ' + A2[cicle],
                                  styleCellLeftSinglCell)
                         A1[cicle] = float(A1[cicle].replace(',', '.'))
                         B1[cicle] = float(B1[cicle].replace(',', '.'))
                         A2[cicle] = float(A2[cicle].replace(',', '.'))
                         Diff.append(round(B1[cicle] - (A1[cicle] + A2[cicle]) / 2, 4))
                         Avr += Diff[cicle]
-                        ws.write(RowWeightReading, 2, str(Diff[cicle]).replace('.', ',') + WeightReadingUnit,
+                        ws.write(RowWeightReading, 2, str(Diff[cicle]).replace('.', ','),
                                  styleCellLeftBottom)
                         RowWeightReading += 1
 
@@ -382,19 +393,19 @@ class DemonConvertation(Thread):
                                 ws.write(x, y, '', styleCellBorder)
                         A1.append(WeightReading[cicle*4].get('WeightReading'))
                         WeightReadingUnit = WeightReading[0].get('WeightReadingUnit')
-                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A1 ' + A1[cicle] + WeightReadingUnit,
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A1 ' + A1[cicle],
                                  styleCellLeftSinglCell)
                         RowWeightReading += 1
                         B1.append(WeightReading[cicle*4 + 1].get('WeightReading'))
-                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' B1 ' + B1[cicle] + WeightReadingUnit,
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' B1 ' + B1[cicle],
                                  styleCellLeftSinglCell)
                         RowWeightReading += 1
                         B2.append(WeightReading[cicle*4 + 2].get('WeightReading'))
-                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' B2 ' + B2[cicle] + WeightReadingUnit,
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' B2 ' + B2[cicle],
                                  styleCellLeftSinglCell)
                         RowWeightReading += 1
                         A2.append(WeightReading[cicle*4 + 3].get('WeightReading'))
-                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A2 ' + A2[cicle] + WeightReadingUnit,
+                        ws.write(RowWeightReading, 1, str(cicle + 1) + ' A2 ' + A2[cicle],
                                  styleCellLeftSinglCell)
                         A1[cicle] = float(A1[cicle].replace(',', '.'))
                         B1[cicle] = float(B1[cicle].replace(',', '.'))
@@ -402,25 +413,28 @@ class DemonConvertation(Thread):
                         A2[cicle] = float(A2[cicle].replace(',', '.'))
                         Diff.append(round((B1[cicle] + B2[cicle]) / 2 - (A1[cicle] + A2[cicle]) / 2, 4))
                         Avr += Diff[cicle]
-                        ws.write(RowWeightReading, 2, str(Diff[cicle]).replace('.', ',') + WeightReadingUnit,
+                        ws.write(RowWeightReading, 2, str(Diff[cicle]).replace('.', ','),
                                  styleCellLeftBottom)
                         RowWeightReading += 1
 
                 Avr = str(round(Avr / len(Diff), 4)).replace('.', ',')
 
                 ConventionalMassCorrection = i.find('ConventionalMassCorrection').text
+                ConventionalMassCorrection = self.roundStr(ConventionalMassCorrection,4)
                 ConventionalMassCorrectionUnit = i.find('ConventionalMassCorrectionUnit').text
                 ConventionalMass = i.find('ConventionalMass').text
+                #ConventionalMass = self.roundStr(ConventionalMass,4)
                 ConventionalMassUnit = i.find('ConventionalMassUnit').text
                 ExpandedMassUncertainty = i.find('ExpandedMassUncertainty').text
                 ExpandedMassUncertaintyUnit = i.find('ExpandedMassUncertaintyUnit').text
-                ws.write(Row, 3, Avr + WeightReadingUnit, styleCellCenterSinglCellTop)
-                ws.write(Row, 4, ReferenceWeight_ConventionalMassError + ConventionalMassCorrectionUnit,
+                ws.write(Row, 3, Avr, styleCellCenterSinglCellTop)
+                ReferenceWeight_ConventionalMassError = self.roundStr(ReferenceWeight_ConventionalMassError,4)
+                ws.write(Row, 4, ReferenceWeight_ConventionalMassError,
                          styleCellCenterSinglCellTop)
-                ws.write(Row, 5, ConventionalMassCorrection + ConventionalMassCorrectionUnit,
+                ws.write(Row, 5, ConventionalMassCorrection,
                          styleCellCenterSinglCellTop)
-                ws.write(Row, 6, ConventionalMass + ConventionalMassUnit, styleCellCenterSinglCellTop)
-                ws.write(Row, 7, ExpandedMassUncertainty + ExpandedMassUncertaintyUnit, styleCellCenterSinglCellTop)
+                ws.write(Row, 6, ConventionalMass, styleCellCenterSinglCellTop)
+                ws.write(Row, 7, ExpandedMassUncertainty, styleCellCenterSinglCellTop)
                 for x in range(Row + 1, Row + len(WeightReading)):
                     ws.write(x, 0, '', styleCellLeftLine)
                     ws.write(x, 8, '', styleCellRightLine)
@@ -433,8 +447,14 @@ class DemonConvertation(Thread):
                 ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири пригодны к использованию по  классу точности ' + TestWeightSet_AccuracyClass + ' согласно ГОСТ OIML R111-1-2009')
                 ws.write(Row + 3, 0, 'На основании результатов поверки выдано свидетельство о поверке № _______________ от ___.__________.______г.')
             else:
-                ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири не пригодны к использованию по классу точности '+TestWeightSet_AccuracyClass+' согласно ГОСТ OIML R111-1-2009')
-                ws.write(Row + 3, 0, 'На основании результатов поверки выдано извещение о непригодности № _______________ от ___.__________.______г.')
+                if CSM != 'КрасЦСМ':
+                    ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири не пригодны к использованию по классу точности '+TestWeightSet_AccuracyClass+' согласно ГОСТ OIML R111-1-2009')
+                    ws.write(Row + 3, 0, 'На основании результатов поверки выдано извещение о непригодности № _______________ от ___.__________.______г.')
+                else:
+                    ws.write(Row + 2, 0,'Заключение по результатам поверки: гири пригодны к использованию по  классу точности ' + TestWeightSet_AccuracyClass + ' согласно ГОСТ OIML R111-1-2009')
+                    ws.write(Row + 3, 0,'На основании результатов поверки выдано свидетельство о поверке № _______________ от ___.__________.______г.')
+
+                pass
 
             ws.write(Row + 6, 0, 'Поверитель:_____________________ ' + CalibratedBy)
             ws.write(Row + 6, 6, 'Дата протокола: ' + str(datetime.date.today().day) +'.' +str(datetime.date.today().month)+'.' +str(datetime.date.today().year))
@@ -450,10 +470,8 @@ class DemonConvertation(Thread):
         # Удаляем исходный файл xml
         os.remove(xml_filename)
 
-# # класс главного окна
+# класс главного окна
 class MainForm:
-    #demon = DemonConvertation
-    #lbXmlFolder = Label()
     def selectXmlFolder(self):
         folder = askdirectory()
         if folder != '':
@@ -469,6 +487,8 @@ class MainForm:
             self.lbExcelFolder["text"] = folder
 
     def close(self):
+        self.demon.runing = False
+        root.destroy()
         exit()
 
     def start(self):
@@ -484,13 +504,11 @@ class MainForm:
         self.btStart['state'] = 'active'
         self.btStop['state'] = 'disabled'
 
-
     def change(self):
         if self.autoopen.get() == 1:
             self.demon.setAutoOpen(True)
         else:
             self.demon.setAutoOpen(False)
-
 
     def __init__(self, master):
         self.demon = DemonConvertation()
@@ -509,10 +527,6 @@ class MainForm:
         self.btStop = Button(self.master, image=self.imgStop, command = self.stop, state = 'disabled')
         self.btStop.place(x=70, y=10, width=30, height=30)
 
-        if self.demon.runing == True:
-            self.btStart['state'] = 'disabled'
-            self.btStop['state'] = 'active'
-
         self.lbXmlFolder = Label(self.master, text='Папка xml: ' + self.demon.xml_folder)
         self.lbXmlFolder.place(x=10, y=50, width=500, height=20)
 
@@ -530,10 +544,17 @@ class MainForm:
             self.chbAutoOpen.select()
         self.chbAutoOpen.place(x=10, y=150, width=200, height=30)
 
+        if self.demon.runing == True:
+            self.btStart['state'] = 'disabled'
+            self.btStop['state'] = 'active'
+            self.demon.start()
+
+        self.master.protocol('WM_DELETE_WINDOW',self.close)
         self.master.mainloop()
 
 # создание окна
 root = Tk()
+# root.protocol('WM_DELETE_WINDOW',MainForm.close())
 
 # запуск окна
 MainForm(root)
