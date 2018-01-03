@@ -1,5 +1,5 @@
 '''
-v1.7
+v1.4
 Программа конвертации отчетов программы MCLink в формате xml в формат xls
 Автооткрытие
 Автозапуск
@@ -17,7 +17,7 @@ import configparser
 import xlrd
 import xlwt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QAction, QApplication, QFileDialog, QLabel, QCheckBox, QToolBar
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QMainWindow, QPushButton, QAction, QApplication, QFileDialog, QLabel, QCheckBox, QToolBar
 from xlutils.copy import copy as xlcopy
 CSM = 'Новокузнецкий ЦСМ'
 
@@ -50,7 +50,6 @@ class DemonConvertation(Thread):
         with open(self.config_filename, "w") as config:
             self.conf.write(config)
         self.Excel_folder = Excel_folder
-
 
     def setTemplateFilename(self, template_filename):
         self.conf.read(self.config_filename)
@@ -206,7 +205,8 @@ class DemonConvertation(Thread):
 
         ReferenceWeightSet_SerialNumber = ReferenceWeightSet[0].get(
             'SerialNumber')  # серийный номер набора эталонов
-        ReferenceWeightSet_Class = ReferenceWeightSet[0].get('Class')  # класс набора эталонов
+        #ReferenceWeightSet_Class = ReferenceWeightSet[0].get('Class')  # класс набора эталонов
+        #ReferenceWeightSet_Range = ReferenceWeightSet[0].get('Range') # диапазон набора эталонов
         # ReferenceWeightSet_NextCalibrationDate = ReferenceWeightSet[0].get('NextCalibrationDate')  # дата следующей калибровки эталонов
 
         # ReferenceWeight_Array = []  # массив наборов эталонов
@@ -299,14 +299,22 @@ class DemonConvertation(Thread):
 
             # TODO: НАстройки в шаблон
             row = 37
+            # TODO: Метрологические характеристики набора
             for ref in ReferenceWeightSet:
                 # название набора гирь
-                ws.write(row, 0, 'Набор гирь', styleCellCenter)
-                ReferenceWeightSet_SerialNumber = ref.get('SerialNumber')
-                ws.write(row, 2, ReferenceWeightSet_SerialNumber, styleCellCenter)
-                ReferenceWeightSet_Class = ref.get('Class')
-                # класс точности набора
-                ws.write(row, 4, ReferenceWeightSet_Class, styleCellCenter)
+                if ref.get('Range') != "":
+                    ws.write(row, 0, 'Набор гирь', styleCellCenter)
+                    ReferenceWeightSet_SerialNumber = ref.get('SerialNumber')
+                    ReferenceWeightSet_info = ref.get('Class') +": " + ref.get('Range')
+                    ws.write(row, 4, ReferenceWeightSet_info, styleCellCenter)
+                    ws.write(row, 2, ReferenceWeightSet_SerialNumber, styleCellCenter)
+                else:
+                    for singleWeight in ReferenceWeight:
+                        if singleWeight.get('SerialNumber') == ref.get('SerialNumber'):
+                            ws.write(row, 0, 'Гиря', styleCellCenter)
+                            ReferenceWeightSet_info = ref.get('Class') + ": " + singleWeight.get('NominalWeight')+singleWeight.get('NominalWeightUnit')
+                            ws.write(row, 4, ReferenceWeightSet_info, styleCellCenter)
+                            ws.write(row, 2, ReferenceWeightSet_SerialNumber, styleCellCenter)
                 row += 1
 
             for comp in MassComparator:
@@ -482,7 +490,7 @@ class DemonConvertation(Thread):
         os.remove(xml_filename)
 
 class MainWindow(QMainWindow):
-    demon = DemonConvertation
+    demon = DemonConvertation()
     startAction = QAction
     stopAction = QAction
     exitAction = QAction
@@ -497,7 +505,7 @@ class MainWindow(QMainWindow):
     btDestFolder = QPushButton
     btTemplate = QPushButton
     chbAutoOpen = QCheckBox
-
+    layH = QHBoxLayout
 
     def __init__(self):
         super().__init__()
@@ -507,7 +515,7 @@ class MainWindow(QMainWindow):
         self.demon.update_settings()
 
         #TODO: Иконка помощь
-        self.exitAction.set
+
         self.exitAction = QAction(QIcon('icons\\exit.png'), 'Выход', self)
         self.exitAction.setShortcut('Ctrl+Q')
         self.exitAction.setStatusTip('Выход')
@@ -530,6 +538,7 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.startAction)
         self.toolbar.addAction(self.stopAction)
 
+        self.layH = QHBoxLayout()
         self.label1 = QLabel('Папка xml:', self)
         self.label1.move(10, 50)
         self.label1.resize(60, 20)
@@ -540,7 +549,9 @@ class MainWindow(QMainWindow):
         self.btScanFolder.move(550, 50)
         self.btScanFolder.resize(30, 20)
         self.btScanFolder.clicked.connect(self.selectXmlFolder)
-
+        self.layH.addWidget(self.label1)
+        self.layH.addWidget(self.lbScanFolder)
+        self.layH.addWidget(self.btScanFolder)
         self.label2 = QLabel('Папка Excel:', self)
         self.label2.move(10, 100)
         self.label2.resize(70, 20)
