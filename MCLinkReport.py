@@ -1,10 +1,12 @@
 '''
-v1.4
 Программа конвертации отчетов программы MCLink в формате xml в формат xls
+
+v1.8 QT на основе ui из QT designer
+Переработан пользовательский интерфейс
 Автооткрытие
 Автозапуск
 Сохранение настроек
-Ошибки в результатах
+
 '''
 import datetime
 import os
@@ -16,12 +18,12 @@ import configparser
 
 import xlrd
 import xlwt
-from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QMainWindow, QPushButton, QAction, QApplication, QFileDialog, QLabel, QCheckBox, QToolBar
 from xlutils.copy import copy as xlcopy
-CSM = 'Новокузнецкий ЦСМ'
+from mainwindow import *
+# CSM = 'Новокузнецкий ЦСМ'
 
-Title = CSM + ". Сохранение протоколов поверки MCLink v1.7"
+Title = ". Сохранение протоколов поверки MCLink v1.8"
 
 class DemonConvertation(Thread):
     runing = bool
@@ -32,7 +34,7 @@ class DemonConvertation(Thread):
     autoopen = bool
     config_filename = 'config.ini'
     conf = configparser.RawConfigParser()
-
+    CSM = ''
     def __init__(self):
         Thread.__init__(self)
         self.update_settings()
@@ -72,6 +74,12 @@ class DemonConvertation(Thread):
             self.conf.write(config)
         self.runing = set
 
+    def setNameCSM (self, set):
+        self.conf.read(self.config_filename)
+        self.conf.set('name','CSMName',str(set))
+        with open(self.config_filename,'w') as config:
+            self.conf.write(config)
+        self.CSM = set
     # Функция обновления настроек
     def update_settings(self):
         self.conf.read(self.config_filename)
@@ -80,6 +88,9 @@ class DemonConvertation(Thread):
         template_filename = self.conf.get('path','Template')
         autostart = self.conf.get('auto','autostart')
         autoopen = self.conf.get('auto','autoopen')
+        CSM = self.conf.get('name','CSMName')
+        if CSM != '':
+            self.CSM = str(CSM)
         if xml_folder != '':
             self.xml_folder = str(xml_folder)
         if Excel_folder != '':
@@ -267,7 +278,7 @@ class DemonConvertation(Thread):
                 CI_Name = 'Набор гирь'
 
             # КрасЦСМ номер протокола не печатаем
-            if CSM != "КрасЦСМ":
+            if self.CSM != "КрасЦСМ":
                 ws.write(1, 4, CertificateNumber)  # номер протокола
             ws.write(2, 1, EndDate)  # дата поверки
             ws.write(3, 1, CI_Name)  # наименование СИ
@@ -466,7 +477,7 @@ class DemonConvertation(Thread):
                 ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири пригодны к использованию по  классу точности ' + TestWeightSet_AccuracyClass + ' согласно ГОСТ OIML R111-1-2009')
                 ws.write(Row + 4, 0, 'На основании результатов поверки выдано свидетельство о поверке № _______________________ от _____._____________._______г.')
             else:
-                if CSM != 'КрасЦСМ':
+                if self.CSM != 'КрасЦСМ':
                     ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири не пригодны к использованию по классу точности '+TestWeightSet_AccuracyClass+' согласно ГОСТ OIML R111-1-2009')
                     ws.write(Row + 4, 0, 'На основании результатов поверки выдано извещение о непригодности № _______________________ от _____._____________._______г.')
                 else:
@@ -491,6 +502,7 @@ class DemonConvertation(Thread):
 
 class MainWindow(QMainWindow):
     demon = DemonConvertation()
+
     startAction = QAction
     stopAction = QAction
     exitAction = QAction
@@ -507,97 +519,50 @@ class MainWindow(QMainWindow):
     chbAutoOpen = QCheckBox
     layH = QHBoxLayout
 
-    def __init__(self):
-        super().__init__()
-        self.initUI()
+    def __init__(self,parent=None):
+        #super().__init__()
+        #self.initUI()
 
-    def initUI(self):
+        QtWidgets.QWidget.__init__(self,parent)
         self.demon.update_settings()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        self.ui.btScanFolder.clicked.connect(self.selectXmlFolder)
+        self.ui.btDestFolder.clicked.connect(self.selectExcelFolder)
+        self.ui.btTemplate.clicked.connect(self.selectTemplate)
+        self.ui.lbScanFolder.setText(self.demon.xml_folder)
+        self.ui.lbDestFolder.setText(self.demon.Excel_folder)
+        self.ui.lbTemplate.setText(self.demon.template_filename)
+        self.ui.CSM.setText(self.demon.CSM)
+        self.setWindowTitle(self.demon.CSM + Title)
 
-        #TODO: Иконка помощь
+        self.ui.exitAction.triggered.connect(self.close)
 
-        self.exitAction = QAction(QIcon('icons\\exit.png'), 'Выход', self)
-        self.exitAction.setShortcut('Ctrl+Q')
-        self.exitAction.setStatusTip('Выход')
-        self.exitAction.triggered.connect(self.close)
+        self.ui.startAction.triggered.connect(self.start)
+        self.ui.startAction.setVisible(True)
 
-        self.startAction = QAction(QIcon('icons\\player_play.png'), 'Запуск', self)
-        self.startAction.setShortcut('Ctrl+C')
-        self.startAction.setStatusTip('Запуск автосохранения')
-        self.startAction.triggered.connect(self.start)
-        self.startAction.setVisible(True)
+        self.ui.stopAction.triggered.connect(self.stop)
+        self.ui.stopAction.setVisible(False)
 
-        self.stopAction = QAction(QIcon('icons\\player_stop.png'), 'Остановка', self)
-        self.stopAction.setShortcut('Ctrl+S')
-        self.stopAction.setStatusTip('Остановка автосохранения')
-        self.stopAction.triggered.connect(self.stop)
-        self.stopAction.setVisible(False)
 
-        self.toolbar = self.addToolBar('Tools')
-        self.toolbar.addAction(self.exitAction)
-        self.toolbar.addAction(self.startAction)
-        self.toolbar.addAction(self.stopAction)
+        self.ui.chbAutoOpen.setChecked(self.demon.autoopen)
+        self.ui.chbAutoOpen.clicked.connect(self.changeAutoOpen)
+        # self.statusBar()
 
-        self.layH = QHBoxLayout()
-        self.label1 = QLabel('Папка xml:', self)
-        self.label1.move(10, 50)
-        self.label1.resize(60, 20)
-        self.lbScanFolder = QLabel(self.demon.xml_folder, self)
-        self.lbScanFolder.move(80, 50)
-        self.lbScanFolder.resize(500, 20)
-        self.btScanFolder = QPushButton("...", self)
-        self.btScanFolder.move(550, 50)
-        self.btScanFolder.resize(30, 20)
-        self.btScanFolder.clicked.connect(self.selectXmlFolder)
-        self.layH.addWidget(self.label1)
-        self.layH.addWidget(self.lbScanFolder)
-        self.layH.addWidget(self.btScanFolder)
-        self.label2 = QLabel('Папка Excel:', self)
-        self.label2.move(10, 100)
-        self.label2.resize(70, 20)
-        self.lbDestFolder = QLabel(self.demon.Excel_folder, self)
-        self.lbDestFolder.move(80, 100)
-        self.lbDestFolder.resize(500, 20)
-        self.btDestFolder = QPushButton("...", self)
-        self.btDestFolder.move(550, 100)
-        self.btDestFolder.resize(30, 20)
-        self.btDestFolder.clicked.connect(self.selectExcelFolder)
-
-        self.label3 = QLabel('Шаблон:',self)
-        self.label3.move(10,150)
-        self.label3.resize(60,20)
-        self.lbTemplate = QLabel(self.demon.template_filename, self)
-        self.lbTemplate.move(80,150)
-        self.lbTemplate.resize(500,20)
-        self.btTemplate = QPushButton('...',self)
-        self.btTemplate.move(550,150)
-        self.btTemplate.resize(30,20)
-        self.btTemplate.clicked.connect(self.selectTemplate)
-
-        self.chbAutoOpen = QCheckBox('Автооткрытие протокола', self)
-        self.chbAutoOpen.move(10, 200)
-        self.chbAutoOpen.resize(200, 30)
-        self.chbAutoOpen.setChecked(self.demon.autoopen)
-        self.chbAutoOpen.clicked.connect(self.changeAutoOpen)
-        self.statusBar()
-        self.setGeometry(500, 300, 600, 250)
-        self.setWindowTitle(Title)
-        self.setWindowIcon(QIcon('icons\\fileopen.png'))
-        self.show()
         if self.demon.runing == True:
             self.start()
 
     def start(self):
-        self.startAction.setVisible(False)
-        self.stopAction.setVisible(True)
+        self.ui.startAction.setVisible(False)
+        self.ui.stopAction.setVisible(True)
         self.demon = DemonConvertation()
         self.demon.setAutoStart(True)
         self.demon.setDaemon(True)
         self.demon.start()
 
     def stop(self):
-        self.startAction.setVisible(True)
-        self.stopAction.setVisible(False)
+        self.ui.startAction.setVisible(True)
+        self.ui.stopAction.setVisible(False)
         self.demon.setAutoStart(False)
 
     def selectXmlFolder(self):
@@ -605,24 +570,24 @@ class MainWindow(QMainWindow):
         if folder != '':
             folder = str(folder).replace('/', '\\')
             self.demon.setXmlFolder(folder)
-            self.lbScanFolder.setText(self.demon.xml_folder)
+            self.ui.lbScanFolder.setText(self.demon.xml_folder)
 
     def selectExcelFolder(self):
         folder = QFileDialog.getExistingDirectory(self, 'Выберите папку сохранения отчетов', '')
         if folder != '':
             folder = str(folder).replace('/', '\\')
             self.demon.setExcelFolder(folder)
-            self.lbDestFolder.setText(self.demon.Excel_folder)
+            self.ui.lbDestFolder.setText(self.demon.Excel_folder)
 
     def selectTemplate(self):
         template,ext = QFileDialog.getOpenFileName(self,'Выберите файл шаблона', self.demon.template_filename, '*.xls')
         if template != '':
             template = str(template).replace('/','\\')
             self.demon.setTemplateFilename(template)
-            self.lbTemplate.setText(self.demon.template_filename)
+            self.ui.lbTemplate.setText(self.demon.template_filename)
 
     def changeAutoOpen(self):
-        if self.chbAutoOpen.isChecked() == True:
+        if self.ui.chbAutoOpen.isChecked() == True:
             self.demon.setAutoOpen(True)
         else:
             self.demon.setAutoOpen(False)
@@ -630,6 +595,7 @@ class MainWindow(QMainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = MainWindow()
+    ex.show()
     sys.exit(app.exec_())
 
 
