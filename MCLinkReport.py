@@ -38,7 +38,7 @@ class DemonConvertation(Thread):
     def __init__(self):
         Thread.__init__(self)
         self.update_settings()
-
+		
     def setXmlFolder(self, xml_folder):
         self.conf.read(self.config_filename)
         self.conf.set('path', 'xml', xml_folder)
@@ -109,7 +109,14 @@ class DemonConvertation(Thread):
     def run(self):
         self.update_settings()
         while self.runing:
-            file = os.listdir(self.xml_folder)
+            try:
+                file = os.listdir(self.xml_folder)
+            except FileNotFoundError:
+                self.setXmlFolder(os.getcwd() + '\\xml')
+                # self.setExcelFolder(file)
+                # self.setTemplateFilename('шаблон.xls')
+                self.update_settings()
+                file = os.listdir(self.xml_folder)
             if len(file) != 0:
                 for i in file:
                     ext = i[-4:]
