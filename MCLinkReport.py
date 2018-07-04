@@ -22,12 +22,12 @@ import configparser
 
 import xlrd
 import xlwt
-import xlutils
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QMainWindow, QPushButton, QAction, QApplication, QFileDialog, QLabel, QCheckBox, QToolBar
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
 from xlutils.copy import copy as xlcopy
 from mainwindow import *
 from dateutil.relativedelta import relativedelta
-# CSM = 'Новокузнецкий ЦСМ'
+
+ver = "2.3"
 
 class DemonConvertation(Thread):
     runing = bool
@@ -54,7 +54,6 @@ class DemonConvertation(Thread):
     ErrorEnable = bool
     CalProtocolEnable = bool
     CalSertEnable = bool
-
 
     config_filename = 'config.ini'
     conf = configparser.RawConfigParser()
@@ -89,7 +88,6 @@ class DemonConvertation(Thread):
 
         with open(self.config_filename, "w") as config:
             self.conf.write(config)
-
 
     def setXmlFolder(self, xml_folder):
         self.conf.read(self.config_filename)
@@ -180,6 +178,8 @@ class DemonConvertation(Thread):
         autodelXML = self.conf.get('auto', 'autodelXML')
         CSM = self.conf.get('name','CSMName')
 
+
+
         if self.conf.get('enable','approvalprotocol') == 'True':
             self.ApprovalProtocolEnable = True
         else:
@@ -205,7 +205,6 @@ class DemonConvertation(Thread):
         else:
             self.CalSertEnable = False
 
-
         self.ApprovalProtocolNum = self.conf.get('numdocs','ApprovalProtocolNum')
         self.ApprovalCertNum = self.conf.get('numdocs', 'ApprovalCertNum')
         self.CalCertNum = self.conf.get('numdocs', 'CalCertNum')
@@ -217,6 +216,30 @@ class DemonConvertation(Thread):
         self.TemplateCalProtocol = self.conf.get('path','TemplateCalProtocol')
         self.TemplateCalCert = self.conf.get('path','TemplateCalCert')
         self.TemplateError = self.conf.get('path','TemplateError')
+
+
+        startpath = os.path.dirname(sys.argv[0]).replace('/','\\')
+        if os.access(xml_folder,0) != True:
+            self.setXmlFolder(str(startpath) + "\\xml")
+        if os.access(Excel_folder,0) != True:
+            self.setExcelFolder(str(startpath) + "\\Excel")
+
+        if os.access(self.TemplateApprovalProtocol,0) != True:
+            self.setTemplateFilename(str(startpath) + "\\templates\\Протокол поверки.xls","TemplateApprovalProtocol")
+
+        if os.access(self.TemplateApprovalCert,0) != True:
+            self.setTemplateFilename(str(startpath) + "\\templates\\Свидетельство о поверке.xls","TemplateApprovalCert")
+
+        if os.access(self.TemplateError,0) != True:
+            self.setTemplateFilename(str(startpath) + "\\templates\\Извещение о непригодности.xls","TemplateError")
+
+        if os.access(self.TemplateCalProtocol,0) != True:
+            self.setTemplateFilename(str(startpath) + "\\templates\\Протокол калибровки.xls","TemplateCalProtocol")
+
+        if os.access(self.TemplateCalCert,0) != True:
+            self.setTemplateFilename(str(startpath) + "\\templates\\Сертификат о калибровке.xls","TemplateCalCert")
+
+
 
         if CSM != '':
             self.CSM = str(CSM)
@@ -398,9 +421,6 @@ class DemonConvertation(Thread):
             wbCert = xlcopy(rbCert)  # копируем книгу в память
             wsCert = wbCert.get_sheet(0)  # выбираем лист свидетельства
             wsCertMert = wbCert.get_sheet(1)  # выбираем лист метрологических характеристик
-
-
-
 
             # стиль ячеки выравнивание по центру
             styleCellCenter = xlwt.easyxf('border: top thin, left thin, bottom thin, right thin; align: horiz center')
@@ -606,6 +626,13 @@ class DemonConvertation(Thread):
                 if ConventionalMassUnit == 'kg':
                     ConventionalMassUnit = 'кг'
 
+                if ConventionalMassCorrectionUnit == 'g':
+                    ConventionalMassCorrectionUnit = 'г'
+                if ConventionalMassCorrectionUnit == 'mg':
+                    ConventionalMassCorrectionUnit = 'мг'
+                if ConventionalMassCorrectionUnit == 'kg':
+                    ConventionalMassCorrectionUnit = 'кг'
+
                 ExpandedMassUncertainty = i.find('ExpandedMassUncertainty').text
                 ExpandedMassUncertaintyUnit = i.find('ExpandedMassUncertaintyUnit').text
                 ws.write(Row, 3, Avr, styleCellCenterSinglCellTop)
@@ -616,9 +643,14 @@ class DemonConvertation(Thread):
                          styleCellCenterSinglCellTop)
                 ws.write(Row, 6, ConventionalMass + ConventionalMassUnit, styleCellCenterSinglCellTop)
 
-                wsCertMert.write(RowMetr, 1, ConventionalMass + ConventionalMassUnit, styleCellCenterSinglCellTop)
-                wsCertMert.write(RowMetr, 2, ConventionalMassCorrection + ConventionalMassUnit, styleCellCenterSinglCellTop)
-                wsCertMert.write(RowMetr, 3, ExpandedMassUncertainty, styleCellCenterSinglCellTop)
+                wsCert.write(RowMetr, 11, Nominal + NominalUnit, styleCellCenter)
+                wsCert.write(RowMetr, 12, "", styleCellCenter)
+                wsCert.write(RowMetr, 13, ConventionalMass + ConventionalMassUnit, styleCellCenter)
+                wsCert.write(RowMetr, 14, "", styleCellCenter)
+                wsCert.write(RowMetr, 15, ConventionalMassCorrection + ConventionalMassCorrectionUnit, styleCellCenter)
+                wsCert.write(RowMetr, 16, "", styleCellCenter)
+                wsCert.write(RowMetr, 17, ExpandedMassUncertainty, styleCellCenter)
+                wsCert.write(RowMetr, 18, "", styleCellLeftSinglCell)
 
                 ws.write(Row, 7, ExpandedMassUncertainty, styleCellCenterSinglCellTop)
 
@@ -632,11 +664,11 @@ class DemonConvertation(Thread):
 
             if Test_Passed:
                 ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири пригодны к использованию по  классу точности ' + TestWeightSet_AccuracyClass + ' согласно ГОСТ OIML R111-1-2009')
-                ws.write(Row + 4, 0, 'На основании результатов поверки выдано свидетельство о поверке № _______________________ от _____._____________._______г.')
+                ws.write(Row + 4, 0, 'На основании результатов поверки выдано свидетельство о поверке № '+ str(self.ApprovalCertNum) +' от _____._____________._______г.')
             else:
                 if self.CSM != 'КрасЦСМ':
                     ws.write(Row + 2, 0, 'Заключение по результатам поверки: гири не пригодны к использованию по классу точности '+TestWeightSet_AccuracyClass+' согласно ГОСТ OIML R111-1-2009')
-                    ws.write(Row + 4, 0, 'На основании результатов поверки выдано извещение о непригодности № _______________________ от _____._____________._______г.')
+                    ws.write(Row + 4, 0, 'На основании результатов поверки выдано извещение о непригодности № '+ str(self.ErrorNum) +' от _____._____________._______г.')
                 else:
                     ws.write(Row + 2, 0,'Заключение по результатам поверки: гири пригодны к использованию по  классу точности ' + TestWeightSet_AccuracyClass + ' согласно ГОСТ OIML R111-1-2009')
                     ws.write(Row + 4, 0,'На основании результатов поверки выдано свидетельство о поверке № _______________________ от _____._____________._______г.')
@@ -655,6 +687,8 @@ class DemonConvertation(Thread):
 
             # Составление свидетельства о поверке
 
+            fileApprovalProtocol = self.Excel_folder + '\\' + self.ApprovalProtocolFolder + '\\' + file_to_save
+            fileApprovalProtocol = fileApprovalProtocol.replace(',', ' ')
 
             if Test_Passed == True:
                 NextYear = datetime.strptime(str(EndDate), "%d.%m.%Y").date()
@@ -678,8 +712,6 @@ class DemonConvertation(Thread):
                 fileApprovalCert = self.Excel_folder + '\\' + self.ApprovalCertFolder + '\\Свидетельство о поверке ' + file_to_save
                 fileApprovalCert = fileApprovalCert.replace(',',' ')
 
-                fileApprovalProtocol = self.Excel_folder + '\\' + self.ApprovalProtocolFolder + '\\' + file_to_save
-                fileApprovalProtocol = fileApprovalProtocol.replace(',', ' ')
 
                 if self.ApprovalSertEnable == False:
                     wb.save(fileApprovalProtocol)
@@ -712,6 +744,10 @@ class DemonConvertation(Thread):
                     wbError.save(fileError)
                     if self.autoopen == True:
                         os.startfile(fileError)
+                if self.CalProtocolEnable:
+                    wb.save(fileApprovalProtocol)
+                    if self.autoopen == True:
+                        os.startfile(fileApprovalProtocol)
 
     def CallReport(self,xml_filename):
         tree = etree.parse(xml_filename)
@@ -888,7 +924,6 @@ class DemonConvertation(Thread):
 
             ws.write(14, 2, Density)
 
-
             ws.write(31, 1, AirTemperature_Min, styleCellCenter)
             ws.write(32, 1, AirTemperature_Max, styleCellCenter)
             ws.write(33, 1, AirTemperature_Avr, styleCellCenter)
@@ -905,7 +940,7 @@ class DemonConvertation(Thread):
             ws.write(32, 7, AirDensity_Max, styleCellCenter)
             ws.write(33, 7, AirDensity_Avr, styleCellCenter)
 
-            # TODO: НАстройки в шаблон
+            # TODO: Настройки в шаблон
             row = 37
             # TODO: Метрологические характеристики набора
             for ref in ReferenceWeightSet:
@@ -965,7 +1000,6 @@ class DemonConvertation(Thread):
                 MeasurementReadings = i.find('MeasurementReadings')
                 WeightReading = MeasurementReadings.findall('WeightReading')
                 RowWeightReading = Row
-                RowMetr += 1
 
                 A1 = []
                 A2 = []
@@ -1056,6 +1090,14 @@ class DemonConvertation(Thread):
                 if ConventionalMassUnit == 'kg':
                     ConventionalMassUnit = 'кг'
 
+                if ConventionalMassCorrectionUnit == 'g':
+                    ConventionalMassCorrectionUnit = 'г'
+                if ConventionalMassCorrectionUnit == 'mg':
+                    ConventionalMassCorrectionUnit = 'мг'
+                if ConventionalMassCorrectionUnit == 'kg':
+                    ConventionalMassCorrectionUnit = 'кг'
+
+
                 ExpandedMassUncertainty = i.find('ExpandedMassUncertainty').text
                 ExpandedMassUncertaintyUnit = i.find('ExpandedMassUncertaintyUnit').text
                 ws.write(Row, 3, Avr, styleCellCenterSinglCellTop)
@@ -1067,10 +1109,15 @@ class DemonConvertation(Thread):
                 ws.write(Row, 6, ConventionalMass + ConventionalMassUnit, styleCellCenterSinglCellTop)
                 ws.write(Row, 7, ExpandedMassUncertainty, styleCellCenterSinglCellTop)
 
-                wsCertMetr.write(RowMetr, 1, ConventionalMass + ConventionalMassUnit, styleCellCenterSinglCellTop)
-                wsCertMetr.write(RowMetr, 2, ConventionalMassCorrection + ConventionalMassUnit, styleCellCenterSinglCellTop)
-                wsCertMetr.write(RowMetr, 3, ExpandedMassUncertainty, styleCellCenterSinglCellTop)
-
+                wsCert.write(RowMetr, 11, Nominal + NominalUnit, styleCellCenter)
+                wsCert.write(RowMetr, 12, "", styleCellCenter)
+                wsCert.write(RowMetr, 13, ConventionalMass + ConventionalMassUnit, styleCellCenter)
+                wsCert.write(RowMetr, 14, "", styleCellCenter)
+                wsCert.write(RowMetr, 15, ConventionalMassCorrection + ConventionalMassCorrectionUnit, styleCellCenter)
+                wsCert.write(RowMetr, 16, "", styleCellCenter)
+                wsCert.write(RowMetr, 17, ExpandedMassUncertainty, styleCellCenter)
+                wsCert.write(RowMetr, 18, "", styleCellLeftSinglCell)
+                RowMetr += 1
                 for x in range(Row + 1, Row + len(WeightReading)):
                     ws.write(x, 0, '', styleCellLeftLine)
                     ws.write(x, 8, '', styleCellRightLine)
@@ -1081,14 +1128,14 @@ class DemonConvertation(Thread):
 
             if Test_Passed:
                 ws.write(Row + 2, 0, 'Заключение по результатам калибровки: гири пригодны к использованию по  классу точности ' + TestWeightSet_AccuracyClass + ' согласно ГОСТ OIML R111-1-2009')
-                ws.write(Row + 4, 0, 'На основании результатов калибровки выдан сертификат о калибровке № _______________________ от _____._____________._______г.')
+                ws.write(Row + 4, 0, 'На основании результатов калибровки выдан сертификат о калибровке № '+ str(self.CalCertNum)  + '        от  _____._____________._______г.')
             else:
                 if self.CSM != 'КрасЦСМ':
                     ws.write(Row + 2, 0, 'Заключение по результатам калибровки: гири не пригодны к использованию по классу точности '+TestWeightSet_AccuracyClass+' согласно ГОСТ OIML R111-1-2009')
                     ws.write(Row + 4, 0, 'На основании результатов поверки выдано извещение о непригодности № _______________________ от _____._____________._______г.')
                 else:
                     ws.write(Row + 2, 0,'Заключение по результатам калибровки: гири пригодны к использованию по  классу точности ' + TestWeightSet_AccuracyClass + ' согласно ГОСТ OIML R111-1-2009')
-                    ws.write(Row + 4, 0,'На основании результатов калибровки выдан сертификат о калибровке № _______________________ от _____._____________._______г.')
+                    ws.write(Row + 4, 0,'На основании результатов калибровки выдан сертификат о калибровке № ______________________  от _____._____________._______г.')
 
                 pass
 
@@ -1123,7 +1170,7 @@ class DemonConvertation(Thread):
 
             file_to_save = self.rightFileName(TestWeightSet_Comment.strip() + ' ' + Company_Name.strip() + ' ' + TestWeightSet_AccuracyClass.strip() + ' '+ TestWeightSet_SerialNumber.strip() +' ' + date_time + '.xls')
             fileCalProtocol = self.Excel_folder + '\\' + self.CalProtocolFolder + '\\' + file_to_save
-            fileCalCert = self.Excel_folder + '\\' + self.CalCertFolder + '\\Сертификат калибровки ' + file_to_save
+            fileCalCert = self.Excel_folder + '\\' + self.CalCertFolder + '\\Сертификат о калибровке ' + file_to_save
 
             if self.CalSertEnable == False:
                 wb.save(fileCalProtocol)
@@ -1140,18 +1187,20 @@ class DemonConvertation(Thread):
 
         tree = etree.parse(xml_filename)
         root = tree.getroot()
-
         WeightSetCalibration = root.find('WeightSetCalibration')
         Methods = WeightSetCalibration.find('Methods')
         Method = Methods.findall('Method')
         Method_ID = Method[0].text # Признак метода Калибровка или Поверка
 
-        IsCallReport = False;
-        IsApprovalReport = False;
+        IsCallReport = False
+        IsApprovalReport = False
+
         if str(Method_ID).find('Калибровка') != -1:
-            IsCallReport = True;
+            IsCallReport = True
+            IsApprovalReport = False
         else:
-            IsApprovalReport = True;
+            IsCallReport = False
+            IsApprovalReport = True
 
         if IsApprovalReport == True:
             self.ApprovalReport(xml_filename)
@@ -1163,29 +1212,9 @@ class DemonConvertation(Thread):
 
 class MainWindow(QMainWindow):
     demon = DemonConvertation()
-    Title = " Сохранение протоколов поверки MCLink v2.1"
-    '''
-	startAction = QAction
-    stopAction = QAction
-    exitAction = QAction
-    saveAction = QAction
-    toolbar = QToolBar
-    label1 = QLabel
-    label2 = QLabel
-    label3 = QLabel
-    lbScanFolder = QLabel
-    lbDestFolder = QLabel
-    lbTemplate = QLabel
-    btScanFolder = QPushButton
-    btDestFolder = QPushButton
-    btTemplate = QPushButton
-    chbAutoOpen = QCheckBox
-    layH = QHBoxLayout
-    '''
-    def __init__(self,parent=None):
-        #super().__init__()
-        #self.initUI()                                                                                                                         x
+    Title = " Сохранение протоколов поверки MCLink v" + ver
 
+    def __init__(self,parent=None):
         QtWidgets.QWidget.__init__(self,parent)
         self.demon.update_settings()
         self.ui = Ui_MainWindow()
@@ -1214,15 +1243,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(self.demon.CSM + self.Title)
 
         self.ui.edTemplateReserved.setVisible(False)
-
         self.ui.exitAction.triggered.connect(self.close)
-
         self.ui.startAction.triggered.connect(self.start)
         self.ui.startAction.setVisible(True)
-
         self.ui.stopAction.triggered.connect(self.stop)
         self.ui.stopAction.setVisible(False)
-
 
         self.ui.chbAutoOpen.setChecked(self.demon.autoopen)
         self.ui.chbAutoOpen.clicked.connect(self.changeAutoOpen)
@@ -1235,7 +1260,6 @@ class MainWindow(QMainWindow):
         self.ui.edErrorNum.setText(str(self.demon.ErrorNum))
 
         self.ui.btSaveSettings.clicked.connect(self.saveSettings)
-
         self.ui.cbxApprovalProtocol.setChecked(self.demon.ApprovalProtocolEnable)
         self.ui.cbxApprovalSert.setChecked(bool(self.demon.ApprovalSertEnable))
         self.ui.cbxError.setChecked(bool(self.demon.ErrorEnable))
@@ -1277,7 +1301,11 @@ class MainWindow(QMainWindow):
         self.demon.setTemplateFilename(self.ui.lbTemplateCalCert.text(),'TemplateCalCert')
         self.demon.setTemplateFilename(self.ui.lbTemplateError.text(),'TemplateError')
 
-
+        self.demon.setProtocol(1,self.ui.cbxApprovalProtocol.isChecked())
+        self.demon.setProtocol(2, self.ui.cbxApprovalSert.isChecked())
+        self.demon.setProtocol(3, self.ui.cbxError.isChecked())
+        self.demon.setProtocol(4, self.ui.cbxCalProtocol.isChecked())
+        self.demon.setProtocol(5, self.ui.cbxCalSert.isChecked())
 
     def start(self):
         self.ui.startAction.setVisible(False)
@@ -1320,6 +1348,13 @@ class MainWindow(QMainWindow):
             self.demon.setTemplateFilename(template,'TemplateApprovalCert')
             self.ui.lbTemplateApprovalCert.setText(self.demon.TemplateApprovalCert)
 
+    def selectTemplateError(self):
+        template,ext = QFileDialog.getOpenFileName(self,'Выберите файл шаблона извещения о непригодности', self.demon.TemplateError, '*.xls')
+        if template != '':
+            template = str(template).replace('/','\\')
+            self.demon.setTemplateFilename(template,'TemplateError')
+            self.ui.lbTemplateError.setText(self.demon.TemplateError)
+
     def selectTemplateCalProtocol(self):
         template,ext = QFileDialog.getOpenFileName(self,'Выберите файл шаблона потокола калибровки', self.demon.TemplateCalProtocol, '*.xls')
         if template != '':
@@ -1333,13 +1368,6 @@ class MainWindow(QMainWindow):
             template = str(template).replace('/','\\')
             self.demon.setTemplateFilename(template,'TemplateCalCert')
             self.ui.lbTemplateCalCert.setText(self.demon.TemplateCalCert)
-
-    def selectTemplateError(self):
-        template,ext = QFileDialog.getOpenFileName(self,'Выберите файл шаблона извещения о непригодности', self.demon.TemplateError, '*.xls')
-        if template != '':
-            template = str(template).replace('/','\\')
-            self.demon.setTemplateFilename(template,'TemplateError')
-            self.ui.lbTemplateError.setText(self.demon.TemplateError)
 
     def changeAutoOpen(self):
         if self.ui.chbAutoOpen.isChecked() == True:
