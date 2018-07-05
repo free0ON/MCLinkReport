@@ -29,6 +29,7 @@ from dateutil.relativedelta import relativedelta
 
 ver = "2.3"
 
+# класс конвертора
 class DemonConvertation(Thread):
     runing = bool
     pathname = str(os.path.dirname(sys.argv[0])).replace('/','\\')
@@ -59,7 +60,7 @@ class DemonConvertation(Thread):
     conf = configparser.RawConfigParser()
     CSM = ''
     ApprovalProtocolFolder = 'Протоколы поверки'
-    ApprovalCertFolder = 'Свидительства о поверке'
+    ApprovalCertFolder = 'Свидетельства о поверке'
     ErrorFolder = 'Извещения о непригодности'
     CalProtocolFolder = 'Протоколы калибровки'
     CalCertFolder = 'Сертификаты о калибровке'
@@ -218,28 +219,27 @@ class DemonConvertation(Thread):
         self.TemplateError = self.conf.get('path','TemplateError')
 
 
-        startpath = os.path.dirname(sys.argv[0]).replace('/','\\')
+        #startpath = os.path.dirname(sys.argv[0]).replace('/','\\')
         if os.access(xml_folder,0) != True:
-            self.setXmlFolder(str(startpath) + "\\xml")
+            self.setXmlFolder(str(self.pathname) + "\\xml")
+
         if os.access(Excel_folder,0) != True:
-            self.setExcelFolder(str(startpath) + "\\Excel")
+            self.setExcelFolder(str(self.pathname) + "\\Excel")
 
         if os.access(self.TemplateApprovalProtocol,0) != True:
-            self.setTemplateFilename(str(startpath) + "\\templates\\Протокол поверки.xls","TemplateApprovalProtocol")
+            self.setTemplateFilename(str(self.pathname) + "\\templates\\Протокол поверки.xls","TemplateApprovalProtocol")
 
         if os.access(self.TemplateApprovalCert,0) != True:
-            self.setTemplateFilename(str(startpath) + "\\templates\\Свидетельство о поверке.xls","TemplateApprovalCert")
+            self.setTemplateFilename(str(self.pathname) + "\\templates\\Свидетельство о поверке.xls","TemplateApprovalCert")
 
         if os.access(self.TemplateError,0) != True:
-            self.setTemplateFilename(str(startpath) + "\\templates\\Извещение о непригодности.xls","TemplateError")
+            self.setTemplateFilename(str(self.pathname) + "\\templates\\Извещение о непригодности.xls","TemplateError")
 
         if os.access(self.TemplateCalProtocol,0) != True:
-            self.setTemplateFilename(str(startpath) + "\\templates\\Протокол калибровки.xls","TemplateCalProtocol")
+            self.setTemplateFilename(str(self.pathname) + "\\templates\\Протокол калибровки.xls","TemplateCalProtocol")
 
         if os.access(self.TemplateCalCert,0) != True:
-            self.setTemplateFilename(str(startpath) + "\\templates\\Сертификат о калибровке.xls","TemplateCalCert")
-
-
+            self.setTemplateFilename(str(self.pathname) + "\\templates\\Сертификат о калибровке.xls","TemplateCalCert")
 
         if CSM != '':
             self.CSM = str(CSM)
@@ -271,12 +271,14 @@ class DemonConvertation(Thread):
                         sleep(1)
             sleep(1)
 
+    # округление строковых чисел
     def roundStr(self, _str, num):
         _str = str(_str).replace(',','.')
         _str = float(_str)
         _str = round(_str,num)
         return str(_str).replace('.',',')
 
+    # проверка имени файла
     def rightFileName(self, _str):
         _str = _str.replace('#', '',200)
         _str = _str.replace('&', '',200)
@@ -294,6 +296,7 @@ class DemonConvertation(Thread):
         _str = _str.replace(',', ' ', 200)
         return _str.strip()
 
+    # формирование поверочного протокола
     def ApprovalReport(self,xml_filename):
         tree = etree.parse(xml_filename)
         root = tree.getroot()
@@ -749,6 +752,7 @@ class DemonConvertation(Thread):
                     if self.autoopen == True:
                         os.startfile(fileApprovalProtocol)
 
+    # формирование протокола калибровки
     def CallReport(self,xml_filename):
         tree = etree.parse(xml_filename)
         root = tree.getroot()
@@ -1183,6 +1187,7 @@ class DemonConvertation(Thread):
                     os.startfile(fileCalProtocol)
                     os.startfile(fileCalCert)
 
+    # запуск конвертации
     def convertation(self, xml_filename=None):
 
         tree = etree.parse(xml_filename)
@@ -1210,6 +1215,7 @@ class DemonConvertation(Thread):
         #if self.autodelXML == True:
         os.remove(xml_filename)
 
+# класс главного окна
 class MainWindow(QMainWindow):
     demon = DemonConvertation()
     Title = " Сохранение протоколов поверки MCLink v" + ver
