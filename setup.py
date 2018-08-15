@@ -1,5 +1,5 @@
 from cx_Freeze import setup, Executable
-
+import MCLinkReport
 #base = 'Win32GUI'
 
 #target = Executable (
@@ -11,7 +11,7 @@ from cx_Freeze import setup, Executable
 
 setup(
     name = "MCLinkReport",
-    version = "2.0",
+    version = MCLinkReport.ver,
     description = "Программа для автоматического создания отчетов MCLink",
     # executables = [target]
 	#options = {'build_exe':{'include_files':include_files}},
