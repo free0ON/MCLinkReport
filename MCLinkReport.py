@@ -13,6 +13,7 @@ v2.0 QT на основе ui из QT designer
 Автозапуск
 Сохранение настроек
 """
+
 from datetime import datetime
 import os
 import sys
