@@ -1,4 +1,4 @@
-<WeightSetCalibrationExport Generated="29.06.2018" Language="ru-RU">
+﻿<WeightSetCalibrationExport Generated="29.06.2018" Language="ru-RU">
   <WeightSetCalibration StartDate="29.06.2018" EndDate="29.06.2018" CertificateNumber="E001P" LevelConfidence="0,995000000" CalibratedBy="Ращепина Марина">
     <ContactOwner CustomerNumber="20677">
       <Company>1120821</Company>
@@ -43,8 +43,7 @@
       <City ZipCode="+" State="+" Country="Russia">+</City>
     </ContactDelivery>
     <TestWeightSet SerialNumber="1120821" Manufacturer="СГ" InternalID="20677" AccuracyClass="OIML R111, F1" MassDefinition="Условная масса" NextCalibration="29.06.2019" Range="200g" CommonShape="Цилиндрическая" CommonAlloyMaterial="Нержавеющая сталь" CommonAlloyMaterialDensity="7950" CommonAlloyMaterialDensityUnit="kg/m3" CalibratedBy="Ращепина Марина">
-      <Comment>
-      </Comment>
+      <Comment>12365-12</Comment>
       <Description>
       </Description>
       <AlloyMaterials>
@@ -156,8 +155,7 @@
     </Methods>
     <ReferenceWeightSets>
       <ReferenceWeightSet SerialNumber="2.1.ZАБ.0991.2015" Class="E1" Range="1g-500g" CommonAlloyMaterial="Нержавеющая сталь" CommonAlloyMaterialDensity="7950" CommonAlloyMaterialDensityUnit="kg/m3" CommonShape="Цилиндрическая" LastCalibrationDate="22.05.2018" CertificateNumber="200/5500-2018" NextCalibrationDate="22.05.2020">
-        <Comment>
-        </Comment>
+        <Comment>2.1.ZАБ.0991.2015</Comment>
       </ReferenceWeightSet>
     </ReferenceWeightSets>
     <UsedReferenceWeightSets>2.1.ZАБ.0991.2015</UsedReferenceWeightSets>

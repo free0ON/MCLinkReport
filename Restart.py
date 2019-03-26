@@ -1,3 +1,3 @@
 import os
 
-os.system('net stop AdobeARMservice')
+os.system('net stop Spooler')

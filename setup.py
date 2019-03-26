@@ -1,19 +1,26 @@
 from cx_Freeze import setup, Executable
 import MCLinkReport
-#base = 'Win32GUI'
+executables = [Executable('MCLinkReport.py', targetName='MCLinkReport.exe', base='Win32GUI', icon='icon.ico')]
 
-#target = Executable (
-    #script = "MCLinkReport.py",
-    #base = "Win32GUI",
-    #icon = "icon.ico"
-	#exe = Executable(script="MCLinkReport.py", base = "Win32GUI", icon='icon.ico')
-#)
+excludes = []
+
+zip_include_packages = ['collections', 'encodings', 'importlib']
+
+include_files = ['Excel', 'icons', 'icon.ico', 'logo.bmp', 'config.ini', 'xlwt', 'templates']
+
+options = {'build_exe': {
+    'include_msvcr': True,
+    'excludes': excludes,
+    'zip_include_packages': zip_include_packages,
+    'build_exe': 'build'
+    }
+}
 
 setup(
-    name = "MCLinkReport",
-    version = MCLinkReport.ver,
-    description = "Программа для автоматического создания отчетов MCLink",
-    # executables = [target]
-	#options = {'build_exe':{'include_files':include_files}},
-	executables=[Executable(script="MCLinkReport.py", base = "Win32GUI", icon='icon.ico')]
-)
+    name='MCLinkReport',
+    version=MCLinkReport.ver,
+    description=MCLinkReport.MainWindow.Title,
+    executables=executables,
+    options=options)
+
+
