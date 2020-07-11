@@ -21,6 +21,6 @@ setup(
     version=MCLinkReport.ver,
     description=MCLinkReport.MainWindow.Title,
     executables=executables,
-    options=options)
+    )
 
 
