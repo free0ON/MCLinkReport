@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Программа конвертации отчетов программы MCLink в формате xml в формат xls
+v.3.9.2 Доработка с подстрочниками для КрасЦСМ
 v.3.9.1 Проблема переноса с as returned
 v 3.9 Проблема с точкой в массе номинала
         подстрочные символы в имени класса точности
@@ -53,7 +54,7 @@ import openpyxl
 import logging
 import shutil
 
-ver = "3.9.1"
+ver = "3.9.2"
 
 logfileName = os.path.dirname(sys.argv[0]).replace('/', '\\') + r'\report.log'
 
@@ -63,18 +64,29 @@ logging.basicConfig(filename=logfileName, level=logging.DEBUG, filemode='w', for
 
 # Подстановка подстрочных символов названий классов
 def ClassReName(ClassName):
-    if str(ClassName) == "E1":
-        return str('\u0045\u2081')
-    if str(ClassName) == "F1":
-        return str('\u0046\u2081')
-    if str(ClassName) == "M1":
-        return str('\u004D\u2081')
-    if str(ClassName) == "E2":
-        return str('\u0045\u2082')
-    if str(ClassName) == "F2":
-        return str('\u0046\u2082')
-    if str(ClassName) == "M2":
-        return str('\u004D\u2082')
+    ret = str(ClassName).replace("E1",str('\u0045\u2081'))
+    ret = str(ret).replace("Е1", str('\u0045\u2081'))
+    ret = str(ret).replace("F1", str('\u0046\u2081'))
+    ret = str(ret).replace("M1",str('\u004D\u2081'))
+    ret = str(ret).replace("М1",str('\u004D\u2081'))
+
+    ret = str(ret).replace("E2",str('\u0045\u2082'))
+    ret = str(ret).replace("Е2",str('\u0045\u2082'))
+    ret = str(ret).replace("F2", str('\u0046\u2082'))
+    ret = str(ret).replace("M2",str('\u004D\u2082'))
+    ret = str(ret).replace("М2",str('\u004D\u2082'))
+    return  ret
+
+    # if str(ClassName) == "F1":
+    #     return str('\u0046\u2081')
+    # if str(ClassName) == "M1":
+    #     return str('\u004D\u2081')
+    # if str(ClassName) == "E2":
+    #     return str('\u0045\u2082')
+    # if str(ClassName) == "F2":
+    #     return str('\u0046\u2082')
+    # if str(ClassName) == "M2":
+    #     return str('\u004D\u2082')
 
 
 class TContactOwner:
@@ -353,7 +365,7 @@ class DemonConvertation(Thread):
 
     ApprovalProtocolEnable = bool  # признак создания протокола калибровки 
     ApprovalCertEnable = bool  # признак создания свидетельства о поверке
-    ErrorEnable = bool  # признак создания извещения о непригодности
+    ErrorEnable = bool  # признак создания извещения о непригодно сти
     CalProtocolEnable = bool  # признак создания протокола калибровки
     CalCertEnable = bool  # признак создания сертификата калибровки
     config_filename = 'config.ini'  # файл конфигурации
@@ -708,6 +720,16 @@ class DemonConvertation(Thread):
         unit = str(unit).replace('g', 'г')
         return unit
 
+    # перевод названия единиц измерения
+    @staticmethod
+    def correctRange(unit):
+        unit = str(unit).replace('ug', ' мкг')
+        unit = str(unit).replace('mg', ' мг')
+        unit = str(unit).replace('kg', ' кг')
+        unit = str(unit).replace('g', ' г')
+        return unit
+
+
     # округление строковых чисел
     @staticmethod
     def roundStr(_str, num):
@@ -754,11 +776,11 @@ class DemonConvertation(Thread):
         TestWeightSet_AccuracyClass = TestWeightSet.get('AccuracyClass')
         TestWeightSet_Manufacturer = TestWeightSet.get('Manufacturer')
         TestWeightSet_InternalID = TestWeightSet.get('InternalID')  # номер клейма предыдущей поверки
-        TestWeightSet_Range = TestWeightSet.get('Range')
+        TestWeightSet_Range = self.correctRange(TestWeightSet.get('Range'))
 
-        str(TestWeightSet_Range).replace('g', 'г')
-        str(TestWeightSet_Range).replace('kg', 'кг')
-        str(TestWeightSet_Range).replace('mg', 'мг')
+        # str(TestWeightSet_Range).replace('g', 'г')
+        # str(TestWeightSet_Range).replace('kg', 'кг')
+        # str(TestWeightSet_Range).replace('mg', 'мг')
 
         TestWeightCalibrations = TestWeightSet.find('TestWeightCalibrations')
         TestWeightCalibrationAsReturned = TestWeightCalibrations.findall('TestWeightCalibrationAsReturned')
@@ -1200,11 +1222,11 @@ class DemonConvertation(Thread):
         TestWeightSet_AccuracyClass = TestWeightSet.get('AccuracyClass')
         TestWeightSet_Manufacturer = TestWeightSet.get('Manufacturer')
         TestWeightSet_InternalID = TestWeightSet.get('InternalID')  # номер клейма предыдущей поверки
-        TestWeightSet_Range = TestWeightSet.get('Range')
+        TestWeightSet_Range = self.correctRange(TestWeightSet.get('Range'))
 
-        str(TestWeightSet_Range).replace('g', 'г')
-        str(TestWeightSet_Range).replace('kg', 'кг')
-        str(TestWeightSet_Range).replace('mg', 'мг')
+        # str(TestWeightSet_Range).replace('g', 'г')
+        # str(TestWeightSet_Range).replace('kg', 'кг')
+        # str(TestWeightSet_Range).replace('mg', 'мг')
 
         TestWeightCalibrations = TestWeightSet.find('TestWeightCalibrations')
         TestWeightCalibrationAsReturned = TestWeightCalibrations.findall('TestWeightCalibrationAsReturned')
@@ -1348,7 +1370,7 @@ class DemonConvertation(Thread):
                 ws.write(1, 3, self.ApprovalProtocolNum)  # номер протокола
             ws.write(3, 5, self.EndDate)  # дата поверки
             ws.write(4, 1, self.Company_Name)  # название заказчика
-            ws.write(5, 1, self.TestWeightSet_Range)  # номинальное заначение массы
+            ws.write(5, 1, self.correctRange(self.TestWeightSet_Range))  # номинальное заначение массы
             ws.write(6, 1, self.TestWeightSet_SerialNumber)  # серийный номер
             ws.write(7, 1, self.TestWeightSet_AccuracyClass)  # класс гири
             ws.write(8, 1, self.TestWeightSet_Comment)  # номер в госреестре
@@ -1696,11 +1718,11 @@ class DemonConvertation(Thread):
         TestWeightSet_AccuracyClass = TestWeightSet.get('AccuracyClass')
         TestWeightSet_Manufacturer = TestWeightSet.get('Manufacturer')
         TestWeightSet_InternalID = TestWeightSet.get('InternalID')  # номер клейма предыдущей поверки
-        TestWeightSet_Range = TestWeightSet.get('Range')
+        TestWeightSet_Range = self.correctRange(TestWeightSet.get('Range'))
 
-        str(TestWeightSet_Range).replace('g', 'г')
-        str(TestWeightSet_Range).replace('kg', 'кг')
-        str(TestWeightSet_Range).replace('mg', 'мг')
+        # str(TestWeightSet_Range).replace('g', 'г')
+        # str(TestWeightSet_Range).replace('kg', 'кг')
+        # str(TestWeightSet_Range).replace('mg', 'мг')
 
         TestWeightCalibrations = TestWeightSet.find('TestWeightCalibrations')
         TestWeightCalibrationAsReturned = TestWeightCalibrations.findall('TestWeightCalibrationAsReturned')
@@ -2359,11 +2381,11 @@ class DemonConvertation(Thread):
         TestWeightSet_AccuracyClass = TestWeightSet.get('AccuracyClass')
         TestWeightSet_Manufacturer = TestWeightSet.get('Manufacturer')
         TestWeightSet_InternalID = TestWeightSet.get('InternalID')  # номер клейма предыдущей поверки
-        TestWeightSet_Range = TestWeightSet.get('Range')
+        TestWeightSet_Range = self.correctRange(TestWeightSet.get('Range'))
 
-        str(TestWeightSet_Range).replace('g', 'г')
-        str(TestWeightSet_Range).replace('kg', 'кг')
-        str(TestWeightSet_Range).replace('mg', 'мг')
+        # str(TestWeightSet_Range).replace('g', 'г')
+        # str(TestWeightSet_Range).replace('kg', 'кг')
+        # str(TestWeightSet_Range).replace('mg', 'мг')
 
         TestWeightCalibrations = TestWeightSet.find('TestWeightCalibrations')
         TestWeightCalibrationAsReturned = TestWeightCalibrations.findall('TestWeightCalibrationAsReturned')
@@ -2978,10 +3000,11 @@ class DemonConvertation(Thread):
                     RefName = str(r['ReferenceWeightSetName']).capitalize()
                 else:
                     RefName = str(r['ReferenceWeightSetName'])
-                RefrenceInfo += ' ' + RefName + ' ' + self.correctUnit(r['Range']) + ' заводской номер ' + r[
-                    'SerialNumber'] + ' рег. № ' + r['Comment']
-                if i < len(self.ReferenceWeightSets):
-                    RefrenceInfo += '; '
+                RefrenceInfo += ' ' + RefName + ' ' + self.correctRange(r['Range']) + ' заводской номер ' + r[
+                    'SerialNumber']
+            #                    + ' рег. № ' + r['Comment']
+            #    if i < len(self.ReferenceWeightSets):
+            #        RefrenceInfo += '; '
 
             Result = ''
             Method = ''
@@ -3010,10 +3033,11 @@ class DemonConvertation(Thread):
 
             DocNumber = self.ApprovalProtocolNum
             document.merge(
+                CINamne=str(self.CI_Name),
                 Type=str(Type),
                 Period=str(Period),
                 Result=str(Result),
-                Method=str(self.Method_ID),
+                Method=str(ClassReName(self.Method_Name)),
                 DocName=str(DocName),
                 DocNumber=str(DocNumber),
                 EndDate=str(self.EndDate),
@@ -3033,9 +3057,9 @@ class DemonConvertation(Thread):
                 DiffUnit=str(self.MesurmentUnit),
                 RefUnit=str(self.MesurmentUnit),
                 AvrUnit=str(self.MesurmentUnit),
-                TestUnit=str(self.MesurmentUnit),
-                TestWeightUnit=str(self.MesurmentUnit),
-                UnsertUnit=str(self.MesurmentUnit),
+                TestUnit=str(self.ConventionalMassUnit[0]),
+                TestWeightUnit=str(self.ConventionalMassCorrectionUnit[0]), # несколько единиц? единицы в строке
+                UnsertUnit=str(self.ExpandedMassUncertaintyUnit[0]),
                 TolUnit=str(self.TolUnit),
                 UserFIO=str(self.CalibratedBy)
             )
@@ -3057,7 +3081,8 @@ class DemonConvertation(Thread):
                     if r < len(self.A1[i]) - 1:
                         Mesurment += '\n'
                         Diff += '\n'
-                rows.append({'MTNominal': str(self.TestWeight_Nominal[i]) + str(self.TestWeight_NominalUnit[i]),
+                rows.append({'MTNominal': str(self.TestWeight_Nominal[i]),
+                             'MTNominalUnit':str(self.TestWeight_NominalUnit[i]),
                              'MTMesurment': str(Mesurment).replace('.', ','),
                              'MTDiff': str(Diff).replace('.', '.'),
                              'MTAvr': str(self.Avr[i]).replace('.', ','),
@@ -3108,7 +3133,7 @@ class DemonConvertation(Thread):
                 RefName = str(r['ReferenceWeightSetName']).capitalize()
             else:
                 RefName = str(r['ReferenceWeightSetName'])
-            RefrenceInfo += ' ' + RefName + ' ' + self.correctUnit(r['Range']) + ' заводской номер ' + r[
+            RefrenceInfo += ' ' + RefName + ' ' + self.correctRange(r['Range']) + ' заводской номер ' + r[
                 'SerialNumber'] + 'рег. №' + r['Comment']
             if i < len(self.ReferenceWeightSets):
                 RefrenceInfo += '; '
@@ -3199,6 +3224,7 @@ class DemonConvertation(Thread):
         if self.autoopen == True:
             logging.debug('Файл сертификата о калибровке для ' + self.Company + ' создан: ' + fileCalCert)
             os.startfile(fileCalCert, 'open')
+
 
     def ErrorReportDoc(self):
         logging.debug('Формирование извещения о непригодности для' + self.Company)
@@ -3336,7 +3362,12 @@ class DemonConvertation(Thread):
                         self.CalCertDoc()
                         self.ReportDoc()
                 else:
-                    if 'Клинский' in self.CSM:
+                    if 'Красноярский' in self.CSM:
+                        if '.xls' in self.TemplateApprovalReport:
+                            self.ApprovalReport(xml_filename)
+                        elif '.docx' in self.TemplateApprovalReport:
+                            self.ReportDoc()
+                    elif 'Клинский' in self.CSM:
                         self.ApprovalReportKlin(xml_filename)
                     else:
                         if '.xls' in self.TemplateApprovalCert:
@@ -3344,7 +3375,6 @@ class DemonConvertation(Thread):
                         elif '.docx' in self.TemplateApprovalCert and self.Test_Passed:
                             self.ApprovalCertDoc()
                             self.ReportDoc()
-
                         elif '.docx' in self.TemplateApprovalCert and not self.Test_Passed:
                             self.ErrorReportDoc()
                             self.CalCertDoc()
@@ -3401,7 +3431,6 @@ class DemonConvertation(Thread):
             except:
                 logging.exception('Повторная ошибка открытия файла ' + xml_filename)
                 return 'Ошибка открытия файла'
-
         try:
             root = tree.getroot()
             WeightSetCalibration = root.find('WeightSetCalibration')
@@ -3691,6 +3720,7 @@ class DemonConvertation(Thread):
                         ExpandedMassUncertaintyUnit = self.correctUnit(i.find('ExpandedMassUncertaintyUnit').text)
                         self.ExpandedMassUncertaintyUnit.append(ExpandedMassUncertaintyUnit)
                         self.TestWeights.append({
+                            'CIName' : str(self.CI_Name).strip('\n').strip(' '),
                             'Nominal': str(i.find('Nominal').text).strip('\n').strip(' '),
                             'NominalUnit': self.correctUnit(str(i.find('NominalUnit').text)),
                             'WeightID': str(i.find('WeightID').text).strip('\n').strip(' '),
@@ -3735,7 +3765,6 @@ class DemonConvertation(Thread):
         for title, coord in dests:
             _ws = _wb[title]
         _ws[coord].value = value
-
 
 # класс главного окна
 class MainWindow(QMainWindow):
