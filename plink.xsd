@@ -1,0 +1,234 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="Protocol">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="CalibOrderN" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="CalibCustomN" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="Scale" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="ID" type="xs:string" />
+              <xs:element name="Name" type="xs:string" />
+              <xs:element name="SerialNumber" type="xs:string" />
+              <xs:element name="ConnectionInfo" type="xs:string" />
+              <xs:element name="ScaleType">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Model" type="xs:string" />
+                    <xs:element name="Manufacturer" type="xs:string" />
+                    <xs:element name="Class" type="xs:string" />
+                    <xs:element name="Capacity" type="xs:string" />
+                    <xs:element name="Resolution" type="xs:string" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="CalibDate" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="NextCalibDate" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="Pipette" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Owner">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Name" type="xs:string" />
+                    <xs:element name="INN" type="xs:string" />
+                    <xs:element name="Address" type="xs:string" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="PipetteType">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="CheckMethod" type="xs:string" />
+                    <xs:element name="Feature" type="xs:string" />
+                    <xs:element name="TypeInfo" type="xs:string" />
+                    <xs:element name="RegisterNumber" type="xs:string" />
+                    <xs:element name="VolumeInfo" type="xs:string" />
+                    <xs:element name="RelAvgDeviation" type="xs:string" />
+                    <xs:element name="RelSKODeviation" type="xs:string" />
+                    <xs:element name="CalibMethod" type="xs:string" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="SerialNumber" type="xs:string" />
+              <xs:element name="Year" type="xs:string" />
+              <xs:element name="Manufacturer" type="xs:string" />
+              <xs:element name="Model" type="xs:string" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="VerifUser" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="FirstName" minOccurs="0" maxOccurs="1" type="xs:string" />
+              <xs:element name="Initials" minOccurs="0" maxOccurs="1" type="xs:string" />
+              <xs:element name="SecondName" minOccurs="0" maxOccurs="1" type="xs:string" />
+              <xs:element name="FullName" minOccurs="0" maxOccurs="1" type="xs:string" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="HeadUser" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="FirstName" minOccurs="0" maxOccurs="1" type="xs:string" />
+              <xs:element name="Initials" minOccurs="0" maxOccurs="1" type="xs:string" />
+              <xs:element name="SecondName" minOccurs="0" maxOccurs="1" type="xs:string" />
+              <xs:element name="FullName" minOccurs="0" maxOccurs="1" type="xs:string" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Invoice" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="HologramN" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="CardNumber" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="AirTemp" type="xs:decimal" />
+        <xs:element name="AirHum" type="xs:decimal" />
+        <xs:element name="AirPress" type="xs:decimal" />
+        <xs:element name="WaterDensity" type="xs:decimal" />
+        <xs:element name="WaterTemp" type="xs:decimal" />
+        <xs:element name="Channels">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element maxOccurs="unbounded" name="Channel">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="ChannelN" type="xs:string" />
+                    <xs:element name="Nominals">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element maxOccurs="unbounded" name="Nominal">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="OrderN" type="xs:string" />
+                                <xs:element name="ChannelN" type="xs:string" />
+                                <xs:element name="WeighingsCount" type="xs:string" />
+                                <xs:element name="NominalValue" type="xs:string" />
+                                <xs:element name="VolumeUnit" type="xs:string" />
+                                <xs:element name="Avg" type="xs:decimal" />
+                                <xs:element name="AbsDeviation" type="xs:decimal" />
+                                <xs:element name="RelDeviation" type="xs:decimal" />
+                                <xs:element name="AbsSKO" type="xs:decimal" />
+                                <xs:element name="RelSKO" type="xs:decimal" />
+                                <xs:element name="Uncertainty" type="xs:decimal" />
+                                <xs:element name="PipetteAbsDeviation" type="xs:decimal" />
+                                <xs:element name="PipetteRelDeviation" type="xs:decimal" />
+                                <xs:element name="PipetteAbsSKO" type="xs:decimal" />
+                                <xs:element name="PipetteRelSKO" type="xs:decimal" />
+                                <xs:element name="Result" type="xs:string" />
+                                <xs:element name="Weighings">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element maxOccurs="unbounded" name="Weighing">
+                                        <xs:complexType>
+                                          <xs:sequence>
+                                            <xs:element name="OrderN" type="xs:string" />
+                                            <xs:element name="Weight" type="xs:decimal" />
+                                            <xs:element name="Volume" type="xs:decimal" />
+                                            <xs:element name="WeightD" type="xs:decimal" />
+                                            <xs:element name="VolumeD" type="xs:decimal" />
+                                          </xs:sequence>
+                                        </xs:complexType>
+                                      </xs:element>
+                                    </xs:sequence>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Z" type="xs:decimal" />
+        <xs:element name="Result" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="IsResultOK"  minOccurs="0" maxOccurs="1" type="xs:string"/>
+        <xs:element name="PrevCalib" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="CalibOrderN" minOccurs="0" maxOccurs="1" type="xs:string" />
+              <xs:element name="CalibCustomN" minOccurs="0" maxOccurs="1" type="xs:string" />
+              <xs:element name="CalibDate" minOccurs="0" maxOccurs="1"  type="xs:string" />
+              <xs:element name="NextCalibDate" minOccurs="0" maxOccurs="1" type="xs:string" />
+              <xs:element name="AirTemp" minOccurs="0" maxOccurs="1" type="xs:decimal" />
+              <xs:element name="AirHum" minOccurs="0" maxOccurs="1" type="xs:decimal" />
+              <xs:element name="AirPress" minOccurs="0" maxOccurs="1" type="xs:decimal" />
+              <xs:element name="WaterDensity" minOccurs="0" maxOccurs="1" type="xs:decimal" />
+              <xs:element name="WaterTemp" minOccurs="0" maxOccurs="1" type="xs:decimal" />
+              <xs:element name="Channels" minOccurs="0" maxOccurs="1" />
+              <xs:element name="Z" minOccurs="0" maxOccurs="1" type="xs:decimal" />
+              <xs:element name="Test11Value" minOccurs="0" maxOccurs="1" type="xs:string" />
+              <xs:element name="Test21Value" minOccurs="0" maxOccurs="1" type="xs:string" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="MethodType" minOccurs="0" maxOccurs="1">
+         <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="MethodType"/>
+            <xs:element type="xs:string" name="Name"/>
+            <xs:element type="xs:string" name="Test11Header"/>
+            <xs:element type="xs:string" name="Test21Header"/>
+            <xs:element type="xs:string" name="AirTemp"/>
+            <xs:element type="xs:string" name="AirHum"/>
+            <xs:element type="xs:string" name="AirPress"/>
+          </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="ProtocolType" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+          <xs:sequence>
+              <xs:element type="xs:string" name="CalibOrderN"/>
+              <xs:element type="xs:string" name="CalibCustomN"/>
+              <xs:element type="xs:string" name="Scale"/>
+              <xs:element type="xs:string" name="CalibDate"/>
+              <xs:element type="xs:string" name="NextCalibDate"/>
+              <xs:element type="xs:string" name="Pipette"/>
+              <xs:element type="xs:string" name="HeadUser"/>
+              <xs:element type="xs:string" name="AirTemp"/>
+              <xs:element type="xs:string" name="AirHum"/>
+              <xs:element type="xs:string" name="AirPress"/>
+              <xs:element type="xs:string" name="WaterDensity"/>
+              <xs:element type="xs:string" name="WaterTemp"/>
+              <xs:element type="xs:string" name="Channels"/>
+              <xs:element type="xs:string" name="Z"/>
+              <xs:element type="xs:string" name="Result"/>
+              <xs:element type="xs:string" name="IsResultOK"/>
+              <xs:element type="xs:string" name="PrevCalib"/>
+              <xs:element type="xs:string" name="Method"/>
+              <xs:element type="xs:string" name="Test11Value"/>
+              <xs:element type="xs:string" name="Test21Value"/>
+          </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Method" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="MethodType" type="xs:string" />
+              <xs:element name="Name" type="xs:string" />
+              <xs:element name="Test11Header" type="xs:string" />
+              <xs:element name="Test21Header" type="xs:string" />
+              <xs:element name="AirTemp" type="xs:string" />
+              <xs:element name="AirHum" type="xs:string" />
+              <xs:element name="AirPress" type="xs:string" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Test11Value" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="Test12Value" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="Test13Value" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="Test21Value" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="Test22Value" minOccurs="0" maxOccurs="1" type="xs:string" />
+        <xs:element name="Test23Value" minOccurs="0" maxOccurs="1" type="xs:string" />
+      </xs:sequence>
+
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
