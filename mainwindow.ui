@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>439</height>
+    <width>766</width>
+    <height>546</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -39,12 +39,12 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>icons/fileopen.png</normaloff>icons/fileopen.png</iconset>
+    <normaloff>icon.ico</normaloff>icon.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0" colspan="2">
-     <layout class="QGridLayout" name="gridLayout" rowminimumheight="6,6,6,6,6,6,6,6,6,6">
+     <layout class="QGridLayout" name="gridLayout" rowminimumheight="6,6,6,6,6,6,6,6,6,6,0,0,0,0,0,0,0,0,0,0,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetFixedSize</enum>
       </property>
@@ -54,144 +54,6 @@
       <property name="horizontalSpacing">
        <number>6</number>
       </property>
-      <item row="3" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_11">
-        <item>
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Шаблоны документов:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="5" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_5">
-        <item>
-         <widget class="QCheckBox" name="cbxApprovalSert">
-          <property name="text">
-           <string>Свидетельство о поверке</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lbTemplateApprovalCert">
-          <property name="text">
-           <string>C:\MCLinkReport\шаблон.xls</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_5">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="btTemplateApprovalCert">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>30</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>30</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Кнопка изменения шаблона</string>
-          </property>
-          <property name="statusTip">
-           <string>Кнопка изменения шаблона</string>
-          </property>
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="4" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QCheckBox" name="cbxApprovalProtocol">
-          <property name="text">
-           <string>Протокол поверки</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lbTemplateApprovalProtocol">
-          <property name="text">
-           <string>C:\MCLinkReport\шаблон.xls</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="btTemplateApprovalProtocol">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>30</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>30</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Кнопка изменения шаблона</string>
-          </property>
-          <property name="statusTip">
-           <string>Кнопка изменения шаблона</string>
-          </property>
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
       <item row="1" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
@@ -257,72 +119,36 @@
         </item>
        </layout>
       </item>
-      <item row="2" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Папка протоколов:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lbDestFolder">
-          <property name="text">
-           <string>C:\MCLinkReport\Excel</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="btDestFolder">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>30</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>30</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Кнопка изменения папки Excel</string>
-          </property>
-          <property name="statusTip">
-           <string>Кнопка изменения папки Excel</string>
-          </property>
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+      <item row="18" column="1">
+       <widget class="QLineEdit" name="edPLCalReportNum"/>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="btSaveSettings">
+        <property name="text">
+         <string>Сохранить настройки</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QLineEdit" name="edCalCertNum"/>
+      </item>
+      <item row="20" column="1">
+       <widget class="QLineEdit" name="edTemplateReserved">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="edApprovalReportNum"/>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLineEdit" name="edErrorNum"/>
       </item>
       <item row="8" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout_9">
         <item>
-         <widget class="QCheckBox" name="cbxCalSert">
+         <widget class="QCheckBox" name="cbxCalCert">
           <property name="text">
            <string>Сертификат калибровки</string>
           </property>
@@ -381,24 +207,24 @@
         </item>
        </layout>
       </item>
-      <item row="7" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_8">
+      <item row="4" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
-         <widget class="QCheckBox" name="cbxCalProtocol">
+         <widget class="QCheckBox" name="cbxApprovalReport">
           <property name="text">
-           <string>Протокол калибровки</string>
+           <string>Протокол поверки</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="lbTemplateCalProtocol">
+         <widget class="QLabel" name="lbTemplateApprovalReport">
           <property name="text">
            <string>C:\MCLinkReport\шаблон.xls</string>
           </property>
          </widget>
         </item>
         <item>
-         <spacer name="horizontalSpacer_7">
+         <spacer name="horizontalSpacer_3">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -411,7 +237,253 @@
          </spacer>
         </item>
         <item>
-         <widget class="QPushButton" name="btTemplateCalProtocol">
+         <widget class="QPushButton" name="btTemplateApprovalReport">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>30</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="statusTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="18" column="0">
+       <layout class="QHBoxLayout" name="hlPLCalReport">
+        <item>
+         <widget class="QCheckBox" name="cbxPLCalReport">
+          <property name="text">
+           <string>Протокол калибровки</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbPLTemplateCalReport">
+          <property name="text">
+           <string>C:\MCLinkReport\шаблон.xls</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="spacerPLCalReport">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btPLTemplateCalReport">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>30</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="statusTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="20" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_10"/>
+      </item>
+      <item row="17" column="1">
+       <widget class="QLineEdit" name="edPLErrorNum"/>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Номера документов:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Шаблоны документов Pipette Link:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <layout class="QHBoxLayout" name="hlDestFolder">
+        <item>
+         <widget class="QLabel" name="lbNameDestFolder">
+          <property name="text">
+           <string>Папка протоколов:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbDestFolder">
+          <property name="text">
+           <string>C:\MCLinkReport\Excel</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="spacerDestFolder">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btDestFolder">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>30</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Кнопка изменения папки Excel</string>
+          </property>
+          <property name="statusTip">
+           <string>Кнопка изменения папки Excel</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_12">
+        <item>
+         <widget class="QLabel" name="lbPaths">
+          <property name="text">
+           <string>Пути:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="16" column="1">
+       <widget class="QLineEdit" name="edPLApprovalCertNum"/>
+      </item>
+      <item row="3" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_11">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Шаблоны документов MCLink:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="7" column="1">
+       <widget class="QLineEdit" name="edCalReportNum"/>
+      </item>
+      <item row="16" column="0">
+       <layout class="QHBoxLayout" name="hlPLApprovalCert">
+        <item>
+         <widget class="QCheckBox" name="cbxPLApprovalCert">
+          <property name="text">
+           <string>Свидетельство о поверке</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbPLTemplateApprovalCert">
+          <property name="text">
+           <string>C:\MCLinkReport\шаблон.xls</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="spacerPLApprovalCert">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btPLTemplateApprovalCert">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -505,47 +577,191 @@
         </item>
        </layout>
       </item>
-      <item row="9" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_10"/>
-      </item>
-      <item row="0" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_12">
+      <item row="5" column="0">
+       <layout class="QHBoxLayout" name="hlTemplateApprovalCert">
         <item>
-         <widget class="QLabel" name="label_3">
+         <widget class="QCheckBox" name="cbxApprovalCert">
           <property name="text">
-           <string>Пути:</string>
+           <string>Свидетельство о поверке</string>
           </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbTemplateApprovalCert">
+          <property name="text">
+           <string>C:\MCLinkReport\шаблон.xls</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btTemplateApprovalCert">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>30</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="statusTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="text">
+           <string>...</string>
           </property>
          </widget>
         </item>
        </layout>
       </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="edApprovalProtocolNum"/>
+      <item row="7" column="0">
+       <layout class="QHBoxLayout" name="hlbtTemplateCalReport">
+        <item>
+         <widget class="QCheckBox" name="cbxCalReport">
+          <property name="text">
+           <string>Протокол калибровки</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbTemplateCalReport">
+          <property name="text">
+           <string>C:\MCLinkReport\шаблон.xls</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_7">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btTemplateCalReport">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>30</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="statusTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
-      <item row="5" column="1">
-       <widget class="QLineEdit" name="edApprovalCertNum"/>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLineEdit" name="edErrorNum"/>
-      </item>
-      <item row="7" column="1">
-       <widget class="QLineEdit" name="edCalProtocolNum"/>
-      </item>
-      <item row="8" column="1">
-       <widget class="QLineEdit" name="edCalCertNum"/>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLabel" name="label_10">
-        <property name="text">
-         <string>Номера документов:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
+      <item row="17" column="0">
+       <layout class="QHBoxLayout" name="hlPLError">
+        <item>
+         <widget class="QCheckBox" name="cbxPLError">
+          <property name="text">
+           <string>Извещение о непригодности</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbPLTemplateError">
+          <property name="text">
+           <string>C:\MCLinkReport\шаблон.xls</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="spacerPLError">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btPLTemplateError">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>30</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="statusTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item row="2" column="1">
        <spacer name="horizontalSpacer_4">
@@ -560,19 +776,203 @@
         </property>
        </spacer>
       </item>
-      <item row="9" column="1">
-       <widget class="QLineEdit" name="edTemplateReserved">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-       </widget>
+      <item row="19" column="1">
+       <widget class="QLineEdit" name="edPLCalCertNum"/>
       </item>
-      <item row="0" column="1">
-       <widget class="QPushButton" name="btSaveSettings">
-        <property name="text">
-         <string>Сохранить настройки</string>
-        </property>
-       </widget>
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="edApprovalCertNum"/>
+      </item>
+      <item row="19" column="0">
+       <layout class="QHBoxLayout" name="hlPLCalCert">
+        <item>
+         <widget class="QCheckBox" name="cbxPLCalCert">
+          <property name="text">
+           <string>Сертификат калибровки</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbPLTemplateCalCert">
+          <property name="text">
+           <string>C:\MCLinkReport\шаблон.xls</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="spacerPLCalCert">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btPLTemplateCalCert">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>30</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="statusTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="13" column="0">
+       <layout class="QHBoxLayout" name="hlPLApprovalReport">
+        <item>
+         <widget class="QCheckBox" name="cbxPLApprovalReport">
+          <property name="text">
+           <string>Протокол поверки</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbPLTemplateApprovalReport">
+          <property name="text">
+           <string>C:\MCLinkReport\шаблон.xls</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="spacerPLApprovalReport">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btPLTemplateApprovalReport">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>30</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="statusTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="14" column="0">
+       <layout class="QHBoxLayout" name="hlPLApprovalReportTable">
+        <item>
+         <widget class="QCheckBox" name="cbxPLApprovalReportTable">
+          <property name="text">
+           <string>Таблица протокола поверки</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbPLTemplateApprovalReportTable">
+          <property name="text">
+           <string>C:\MCLinkReport\шаблон.xls</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="spacerPLApprovalReportTable">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btPLTemplateApprovalReportTable">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>30</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="statusTip">
+           <string>Кнопка изменения шаблона</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="13" column="1">
+       <widget class="QLineEdit" name="edPLApprovalReportNum"/>
+      </item>
+      <item row="14" column="1">
+       <widget class="QLineEdit" name="edPLApprovalReportlNumTable"/>
       </item>
      </layout>
     </item>
@@ -610,8 +1010,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
-     <height>26</height>
+     <width>766</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>

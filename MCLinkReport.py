@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Программа конвертации отчетов программы MCLink в формате xml в формат xls
+v.4.0.0 Обмен с PLink, xsd схема xml
+v.3.9.3 Ошибка в выводе данных измерения. Точка вместо запятой в разности
 v.3.9.2 Доработка с подстрочниками для КрасЦСМ
 v.3.9.1 Проблема переноса с as returned
 v 3.9 Проблема с точкой в массе номинала
@@ -53,8 +55,14 @@ from openpyxl import load_workbook
 import openpyxl
 import logging
 import shutil
+import xmlschema
+from docx import Document
+import plink
+import docx
+from docx.oxml.shared import qn
 
-ver = "3.9.2"
+
+ver = "4.0.0"
 
 logfileName = os.path.dirname(sys.argv[0]).replace('/', '\\') + r'\report.log'
 
@@ -89,56 +97,56 @@ def ClassReName(ClassName):
     #     return str('\u004D\u2082')
 
 
-class TContactOwner:
-    def __init__(self, Company, CustomerNumber):
-        self.Company = Company
-        self.CustomerNumber = CustomerNumber
-
-    Company = ''
-    CustomerNumber = ''
-    Department = ''
-    CustomerName = ''
-    EMail = ''
-    PhoneNumber = ''
-    FaxNumber = ''
-    Address = ''
-
-
-class TEnvironmentalConditions:
-    AirTemperature_Min = ''
-    AirTemperature_Max = ''
-    AirTemperature_Average = ''
-    AirTemperature_Unit = ''
-
-    AirPressure_Min = ''
-    AirPressure_Max = ''
-    AirPressure_Average = ''
-    AirPressure_Unit = ''
-
-    Humidity_Min = ''
-    Humidity_Max = ''
-    Humidity_Average = ''
-    Humidity_Unit = ''
-
-    AirDensity_Min = ''
-    AirDensity_Max = ''
-    AirDensity_Average = ''
-    AirDensity_Unit = ''
+# class TContactOwner:
+#     def __init__(self, Company, CustomerNumber):
+#         self.Company = Company
+#         self.CustomerNumber = CustomerNumber
+#
+#     Company = ''
+#     CustomerNumber = ''
+#     Department = ''
+#     CustomerName = ''
+#     EMail = ''
+#     PhoneNumber = ''
+#     FaxNumber = ''
+#     Address = ''
 
 
-class TMethods:
-    def __init__(self, Name, Process, Description, MethodID):
-        self.Name = Name
-        self.Process = Process
-        self.Description = Description
-        self.MethodID = MethodID
-
-    Name = ''
-    Process = ''
-    Version = ''
-    Index = ''
-    Description = ''
-    MethodID = ''
+# class TEnvironmentalConditions:
+#     AirTemperature_Min = ''
+#     AirTemperature_Max = ''
+#     AirTemperature_Average = ''
+#     AirTemperature_Unit = ''
+#
+#     AirPressure_Min = ''
+#     AirPressure_Max = ''
+#     AirPressure_Average = ''
+#     AirPressure_Unit = ''
+#
+#     Humidity_Min = ''
+#     Humidity_Max = ''
+#     Humidity_Average = ''
+#     Humidity_Unit = ''
+#
+#     AirDensity_Min = ''
+#     AirDensity_Max = ''
+#     AirDensity_Average = ''
+#     AirDensity_Unit = ''
+#
+#
+# class TMethods:
+#     def __init__(self, Name, Process, Description, MethodID):
+#         self.Name = Name
+#         self.Process = Process
+#         self.Description = Description
+#         self.MethodID = MethodID
+#
+#     Name = ''
+#     Process = ''
+#     Version = ''
+#     Index = ''
+#     Description = ''
+#     MethodID = ''
 
 
 # class TReferenceWeightSets:
@@ -351,30 +359,30 @@ class DemonConvertation(Thread):
     TemplateApprovalReport = ""
     TemplateApprovalCert = ""
     TemplateError = ""
-    TemplateProtocolCal = ""
+    TemplateReportCal = ""
     TemplateCalCert = ""
-    TemplateComparatorApprovalProtocol = pathname + r'\templates\Протокол_поверки_компаратора.xls'
+    TemplateComparatorApprovalReport = pathname + r'\templates\Протокол_поверки_компаратора.xls'
 
     autoopen = bool  # автоокрытие отчета после его создания
     autodelXML = bool  # автоудаление XML после создания отчета 
-    ApprovalProtocolNum = 0  # номер протокол поверки
+    ApprovalReportNum = 0  # номер протокол поверки
     ApprovalCertNum = 0  # номер свидетельства о поверке
     CalCertNum = 0  # номер калибровочного сертификата
     ErrorNum = 0  # номер извещения о непригодности 
-    CalProtocolNum = 0  # номер протокола калибровки
+    CalReportNum = 0  # номер протокола калибровки
 
-    ApprovalProtocolEnable = bool  # признак создания протокола калибровки 
+    ApprovalReportEnable = bool  # признак создания протокола калибровки
     ApprovalCertEnable = bool  # признак создания свидетельства о поверке
     ErrorEnable = bool  # признак создания извещения о непригодно сти
-    CalProtocolEnable = bool  # признак создания протокола калибровки
+    CalReportEnable = bool  # признак создания протокола калибровки
     CalCertEnable = bool  # признак создания сертификата калибровки
     config_filename = 'config.ini'  # файл конфигурации
     conf = configparser.RawConfigParser()
     CSM = ''  # название ЦСМ 
-    ApprovalProtocolFolder = 'Протоколы поверки'  # названия папок
+    ApprovalReportFolder = 'Протоколы поверки'  # названия папок
     ApprovalCertFolder = 'Свидетельства о поверке'  # ...
     ErrorFolder = 'Извещения о непригодности'  # ...
-    CalProtocolFolder = 'Протоколы калибровки'  # ...
+    CalReportFolder = 'Протоколы калибровки'  # ...
     CalCertFolder = 'Сертификаты о калибровке'  # ...
     models = ""  # названия моделей компараторов
 
@@ -387,8 +395,8 @@ class DemonConvertation(Thread):
     Company_Name = ''  # название заказчика
     CustomerNumber = ''  # номер заказчика
     CalibratedBy = ''  # ФИО поверителя
-    HeadFIO = 'Писаревский Р.И.'
-    HeadName = 'Начальник отдела мех. СИ'
+    HeadFIO = ''
+    HeadName = ''
     Adress = ''  # адрес заказчика
     Density = ''  # плотность материала гирь
     CertificateNumber = ''  # номер документа
@@ -465,6 +473,70 @@ class DemonConvertation(Thread):
     Avr = []
     round_number = 5
 
+    #----------------- Pipete Link
+
+    PL_Pipette_Owner_INN = ''
+    PL_Pipette_Owner_Address = ''
+    PL_Pipette_PipetteType_CheckMethod = ''
+    PL_Pipette_PipetteType_Feature = ''
+    PL_Pipette_PipetteType_TypeInfo = ''
+    PL_Pipette_PipetteType_RegisterNumber = ''
+    PL_Pipette_PipetteType_VolumeInfo = ''
+    PL_Pipette_PipetteType_RelSKODeviation = ''
+    PL_Pipette_PipetteType_iCalibMethod = ''
+    PL_Pipette_SerialNumber = ''
+    PL_Pipette_Year = ''
+    PL_Pipette_Rainin = ''
+    PL_Pipette_Model = ''
+    PL_VerifUser_FullName = ''
+    PL_VerifUser_SecondName = ''
+    PL_AirTemp = ''
+    PL_AirHum = ''
+    PL_AirPress = ''
+    PL_WaterDensity = ''
+    PL_WaterTemp = ''
+    PL_Channels_Channel_ChannelN = ''
+    PL_Nominals_Nominal_NominalValue = ''
+    PL_Nominals_Nominal_VolumeUnit = ''
+    PL_Nominals_Nominal_Avg = ''
+    PL_Nominals_Nominal_AbsDeviation = ''
+    PL_Nominals_Nominal_RelDeviation = ''
+    PL_Nominals_Nominal_AbsSKO = ''
+    PL_Nominals_Nominal_RelSKO = ''
+    PL_Nominals_Nominal_Uncertainty = ''
+    PL_Nominals_Nominal_Result = ''
+
+    PL_TemplateApprovalReport = ""
+    PL_TemplateApprovalReportTable = ""
+    PL_TemplateApprovalCert = ""
+    PL_TemplateError = ""
+    PL_TemplateReportCal = ""
+    PL_TemplateCalCert = ""
+    PL_ApprovalReportEnable = bool  # признак создания протокола калибровки
+    PL_ApprovalCertEnable = bool  # признак создания свидетельства о поверке
+    PL_ErrorEnable = bool  # признак создания извещения о непригодно сти
+    PL_CalReportEnable = bool  # признак создания протокола калибровки
+    PL_CalCertEnable = bool  # признак создания сертификата калибровки
+
+    PL_ApprovalReportNum = 0  # номер протокол поверки
+    PL_ApprovalCertNum = 0  # номер свидетельства о поверке
+    PL_CalCertNum = 0  # номер калибровочного сертификата
+    PL_ErrorNum = 0  # номер извещения о непригодности
+    PL_CalReportNum = 0  # номер протокола калибровки
+
+    PL_data = []
+    PL_CalibDate = ''
+    PL_NextCalibDate = ''
+    PL_CalibCustomN = ''
+    PL_Scale_Name = ''
+    PL_Scale_SerialNumber = ''
+    PL_Scale_ScaleType_Model = ''
+    PL_Method_Name = ''
+    PL_Pipette_Owner_Name = ''
+    PL_Pipette_INN = ''
+    PL_Pipette_Adress = ''
+    XML_File_Type = ''
+
     # конструктор класса конвертора
     def __init__(self):
         Thread.__init__(self)
@@ -472,23 +544,40 @@ class DemonConvertation(Thread):
         self.update_settings()
 
     # устанавливаем признаки протоколов
-    def setProtocol(self, protocol, set):
+    def setReport(self, Report, set):
         self.conf.read(self.config_filename)
-        if protocol == 1:
-            self.conf.set('enable', 'approvalprotocol', set)
-            self.ApprovalProtocolEnable = set
-        if protocol == 2:
-            self.conf.set('enable', 'approvalsert', set)
+        if Report == 11:
+            self.conf.set('enable', 'PLapprovalReport', set)
+            self.PL_ApprovalReportEnable = set
+        if Report == 12:
+            self.conf.set('enable', 'PLapprovalcert', set)
+            self.PL_ApprovalCertEnable = set
+        if Report == 13:
+            self.conf.set('enable', 'PLerror', set)
+            self.PL_ErrorEnable = set
+        if Report == 14:
+            self.conf.set('enable', 'PLcalReport', set)
+            self.PL_CalReportEnable = set
+        if Report == 15:
+            self.conf.set('enable', 'PLcalcert', set)
+            self.PL_CalCertEnable = set
+
+        if Report == 1:
+            self.conf.set('enable', 'approvalReport', set)
+            self.ApprovalReportEnable = set
+        if Report == 1:
+            self.conf.set('enable', 'approvalcert', set)
             self.ApprovalCertEnable = set
-        if protocol == 3:
+        if Report == 1:
             self.conf.set('enable', 'error', set)
             self.ErrorEnable = set
-        if protocol == 4:
-            self.conf.set('enable', 'calprotocol', set)
-            self.CalProtocolEnable = set
-        if protocol == 5:
-            self.conf.set('enable', 'calsert', set)
+        if Report == 1:
+            self.conf.set('enable', 'calReport', set)
+            self.CalReportEnable = set
+        if Report == 1:
+            self.conf.set('enable', 'calcert', set)
             self.CalCertEnable = set
+
 
         with open(self.config_filename, "w") as config:
             self.conf.write(config)
@@ -514,12 +603,12 @@ class DemonConvertation(Thread):
     def folderExist(self):
         if not os.access(self.Excel_folder, os.F_OK):
             os.mkdir(self.Excel_folder)
-        if not os.access(self.Excel_folder + '\\' + self.ApprovalProtocolFolder, os.F_OK):
-            os.mkdir(self.Excel_folder + '\\' + self.ApprovalProtocolFolder)
+        if not os.access(self.Excel_folder + '\\' + self.ApprovalReportFolder, os.F_OK):
+            os.mkdir(self.Excel_folder + '\\' + self.ApprovalReportFolder)
         if not os.access(self.Excel_folder + '\\' + self.ApprovalCertFolder, os.F_OK):
             os.mkdir(self.Excel_folder + '\\' + self.ApprovalCertFolder)
-        if not os.access(self.Excel_folder + '\\' + self.CalProtocolFolder, os.F_OK):
-            os.mkdir(self.Excel_folder + '\\' + self.CalProtocolFolder)
+        if not os.access(self.Excel_folder + '\\' + self.CalReportFolder, os.F_OK):
+            os.mkdir(self.Excel_folder + '\\' + self.CalReportFolder)
         if not os.access(self.Excel_folder + '\\' + self.CalCertFolder, os.F_OK):
             os.mkdir(self.Excel_folder + '\\' + self.CalCertFolder)
         if not os.access(self.Excel_folder + '\\' + self.ErrorFolder, os.F_OK):
@@ -531,11 +620,20 @@ class DemonConvertation(Thread):
         self.conf.set('path', template, template_filename)
         with open(self.config_filename, "w") as config:
             self.conf.write(config)
-        if template == 'TemplateApprovalProtocol': self.TemplateApprovalReport = template_filename
+        if template == 'TemplateApprovalReport': self.TemplateApprovalReport = template_filename
         if template == 'TemplateApprovalCert': self.TemplateApprovalCert = template_filename
-        if template == 'TemplateCalProtocol': self.TemplateCalReport = template_filename
+        if template == 'TemplateCalReport': self.TemplateCalReport = template_filename
         if template == 'TemplateCalCert':  self.TemplateCalCert = template_filename
         if template == 'TemplateError':  self.TemplateError = template_filename
+
+        if template == 'PLTemplateApprovalReport': self.PL_TemplateApprovalReport = template_filename
+        if template == 'PLTemplateApprovalReportTable': self.PL_TemplateApprovalReportTable = template_filename
+        if template == 'PLTemplateApprovalCert': self.PL_TemplateApprovalCert = template_filename
+        if template == 'PLTemplateCalReport': self.PLTemplateCalReport = template_filename
+        if template == 'PLTemplateCalCert':  self.PL_TemplateCalCert = template_filename
+        if template == 'PLTemplateError':  self.PL_TemplateError = template_filename
+
+
 
     # устнавливаем признак автооокрытия
     def setAutoOpen(self, set):
@@ -576,11 +674,19 @@ class DemonConvertation(Thread):
         with open(self.config_filename, 'w') as config:
             self.conf.write(config)
 
-        if (name == 'ApprovalProtocolNum'):  self.ApprovalProtocolNum = set
+        if (name == 'ApprovalReportNum'):  self.ApprovalReportNum = set
         if (name == 'ApprovalCertNum'):  self.ApprovalCertNum = set
         if (name == 'CalCertNum'):  self.CalCertNum = set
         if (name == 'ErrorNum'):  self.ErrorNum = set
-        if (name == 'CalProtocolNum'):  self.CalProtocolNum = set
+        if (name == 'CalReportNum'):  self.CalReportNum = set
+
+        if (name == 'PLApprovalReportNum'):  self.PL_ApprovalReportNum = set
+        if (name == 'PLApprovalCertNum'):  self.PL_ApprovalCertNum = set
+        if (name == 'PLCalCertNum'):  self.PL_CalCertNum = set
+        if (name == 'PLErrorNum'):  self.PL_ErrorNum = set
+        if (name == 'PlCalReportNum'):  self.PL_CalReportNum = set
+
+
 
     # увличиваем номер документа
     def incNums(self, set, name):
@@ -606,12 +712,12 @@ class DemonConvertation(Thread):
         for i in range(0, len(self.models)):
             self.models[i] = str(self.models[i]).split(';')
 
-        if self.conf.get('enable', 'approvalprotocol') == 'True':
-            self.ApprovalProtocolEnable = True
+        if self.conf.get('enable', 'approvalReport') == 'True':
+            self.ApprovalReportEnable = True
         else:
-            self.ApprovalProtocolEnable = False
+            self.ApprovalReportEnable = False
 
-        if self.conf.get('enable', 'approvalsert') == 'True':
+        if self.conf.get('enable', 'approvalcert') == 'True':
             self.ApprovalCertEnable = True
         else:
             self.ApprovalCertEnable = False
@@ -621,33 +727,78 @@ class DemonConvertation(Thread):
         else:
             self.ErrorEnable = False
 
-        if self.conf.get('enable', 'calprotocol') == 'True':
-            self.CalProtocolEnable = True
+        if self.conf.get('enable', 'calReport') == 'True':
+            self.CalReportEnable = True
         else:
-            self.CalProtocolEnable = False
+            self.CalReportEnable = False
 
-        if self.conf.get('enable', 'calsert') == 'True':
+        if self.conf.get('enable', 'calcert') == 'True':
             self.CalCertEnable = True
         else:
             self.CalCertEnable = False
 
-        self.ApprovalProtocolNum = self.conf.get('numdocs', 'ApprovalProtocolNum')
+        if self.conf.get('enable', 'PLapprovalReport') == 'True':
+            self.PL_ApprovalReportEnable = True
+        else:
+            self.PL_ApprovalReportEnable = False
+
+        if self.conf.get('enable', 'PLapprovalcert') == 'True':
+            self.PL_ApprovalCertEnable = True
+        else:
+            self.PL_ApprovalCertEnable = False
+
+        if self.conf.get('enable', 'PLerror') == 'True':
+            self.PL_ErrorEnable = True
+        else:
+            self.PL_ErrorEnable = False
+
+        if self.conf.get('enable', 'PLcalReport') == 'True':
+            self.PL_CalReportEnable = True
+        else:
+            self.PL_CalReportEnable = False
+
+        if self.conf.get('enable', 'PLcalcert') == 'True':
+            self.PL_CalCertEnable = True
+        else:
+            self.PL_CalCertEnable = False
+
+
+        self.ApprovalReportNum = self.conf.get('numdocs', 'ApprovalReportNum')
         self.ApprovalCertNum = self.conf.get('numdocs', 'ApprovalCertNum')
         self.CalCertNum = self.conf.get('numdocs', 'CalCertNum')
         self.ErrorNum = self.conf.get('numdocs', 'ErrorNum')
-        self.CalProtocolNum = self.conf.get('numdocs', 'CalProtocolNum')
+        self.CalReportNum = self.conf.get('numdocs', 'CalReportNum')
 
-        self.TemplateApprovalReport = self.conf.get('path', 'TemplateApprovalProtocol')
-        if self.TemplateApprovalReport[
-            1] != ':': self.TemplateApprovalReport = dir_path + "\\" + self.TemplateApprovalReport
-        self.TemplateApprovalCert = self.conf.get('path', 'TemplateApprovalCert')
-        if self.TemplateApprovalCert[1] != ':': self.TemplateApprovalCert = dir_path + "\\" + self.TemplateApprovalCert
-        self.TemplateCalReport = self.conf.get('path', 'TemplateCalProtocol')
-        if self.TemplateCalReport[1] != ':': self.TemplateCalReport = dir_path + "\\" + self.TemplateCalReport
-        self.TemplateCalCert = self.conf.get('path', 'TemplateCalCert')
-        if self.TemplateCalCert[1] != ':': self.TemplateCalCert = dir_path + "\\" + self.TemplateCalCert
-        self.TemplateError = self.conf.get('path', 'TemplateError')
-        if self.TemplateError[1] != ':': self.TemplateError = dir_path + "\\" + self.TemplateError
+        self.PL_ApprovalReportNum = self.conf.get('numdocs', 'PLApprovalReportNum')
+        self.PL_ApprovalCertNum = self.conf.get('numdocs', 'PLApprovalCertNum')
+        self.PL_CalCertNum = self.conf.get('numdocs', 'PLCalCertNum')
+        self.PL_ErrorNum = self.conf.get('numdocs', 'PLErrorNum')
+        self.PL_CalReportNum = self.conf.get('numdocs', 'PLCalReportNum')
+
+
+        self.TemplateApprovalReport = self.correctPath(self.conf.get('path', 'TemplateApprovalReport'))
+        #if self.TemplateApprovalReport[1] != ':': self.TemplateApprovalReport = dir_path + "\\" + self.TemplateApprovalReport
+        self.TemplateApprovalCert = self.correctPath(self.conf.get('path', 'TemplateApprovalCert'))
+        #if self.TemplateApprovalCert[1] != ':': self.TemplateApprovalCert = dir_path + "\\" + self.TemplateApprovalCert
+        self.TemplateCalReport = self.correctPath(self.conf.get('path', 'TemplateCalReport'))
+        #if self.TemplateCalReport[1] != ':': self.TemplateCalReport = dir_path + "\\" + self.TemplateCalReport
+        self.TemplateCalCert = self.correctPath(self.conf.get('path', 'TemplateCalCert'))
+        #if self.TemplateCalCert[1] != ':': self.TemplateCalCert = dir_path + "\\" + self.TemplateCalCert
+        self.TemplateError = self.correctPath(self.conf.get('path', 'TemplateError'))
+        #if self.TemplateError[1] != ':': self.TemplateError = dir_path + "\\" + self.TemplateError
+
+        self.PL_TemplateApprovalReport = self.correctPath(self.conf.get('path', 'PLTemplateApprovalReport'))
+        #if self.PLTemplateApprovalReport[1] != ':': self.PLTemplateApprovalReport = dir_path + "\\" + self.PLTemplateApprovalReport
+        self.PL_TemplateApprovalReportTable = self.correctPath(self.conf.get('path', 'PLTemplateApprovalReportTable'))
+        self.PL_TemplateApprovalCert = self.correctPath(self.conf.get('path', 'PLTemplateApprovalCert'))
+        #if self.PLTemplateApprovalCert[1] != ':': self.PLTemplateApprovalCert = dir_path + "\\" + self.PLTemplateApprovalCert
+        self.PLTemplateCalReport = self.correctPath(self.conf.get('path', 'PLTemplateCalReport'))
+        #if self.PLTemplateCalReport[1] != ':': self.PLTemplateCalReport = dir_path + "\\" + self.PLTemplateCalReport
+        self.PL_TemplateCalCert = self.correctPath(self.conf.get('path', 'PLTemplateCalCert'))
+        #if self.PLTemplateCalCert[1] != ':': self.PLTemplateCalCert = dir_path + "\\" + self.PLTemplateCalCert
+        self.PL_TemplateError = self.correctPath(self.conf.get('path', 'PLTemplateError'))
+        #if self.PLTemplateError[1] != ':': self.PLTemplateError = dir_path + "\\" + self.PLTemplateError
+
         # startpath = os.path.dirname(sys.argv[0]).replace('/','\\')
         if os.access(xml_folder, 0) != True:
             self.setXmlFolder(str(self.pathname) + r"\xml")
@@ -657,7 +808,7 @@ class DemonConvertation(Thread):
 
         if os.access(self.TemplateApprovalReport, 0) != True:
             self.setTemplateFilename(str(self.pathname) + r"\templates\Протокол_поверки_калибровки.docx",
-                                     "TemplateApprovalProtocol")
+                                     "TemplateApprovalReport")
 
         if os.access(self.TemplateApprovalCert, 0) != True:
             self.setTemplateFilename(str(self.pathname) + r"\templates\Свидетельство_о_поверке.docx",
@@ -668,10 +819,31 @@ class DemonConvertation(Thread):
 
         if os.access(self.TemplateCalReport, 0) != True:
             self.setTemplateFilename(str(self.pathname) + r"\templates\Протокол_поверки_калибровки.docx",
-                                     "TemplateCalProtocol")
+                                     "TemplateCalReport")
 
         if os.access(self.TemplateCalCert, 0) != True:
             self.setTemplateFilename(str(self.pathname) + r"\templates\Сертификат_о_калибровке.docx", "TemplateCalCert")
+
+
+        if os.access(self.PL_TemplateApprovalReport, 0) != True:
+            self.setTemplateFilename(str(self.pathname) + r"\templates\Протокол_поверки_калибровки.docx",
+                                     "PLTemplateApprovalReport")
+
+        if os.access(self.PL_TemplateApprovalCert, 0) != True:
+            self.setTemplateFilename(str(self.pathname) + r"\templates\Свидетельство_о_поверке.docx",
+                                     "PLTemplateApprovalCert")
+
+        if os.access(self.PL_TemplateError, 0) != True:
+            self.setTemplateFilename(str(self.pathname) + r"\templates\Извещение_о_непригодности.docx", "PLTemplateError")
+
+        if os.access(self.PLTemplateCalReport, 0) != True:
+            self.setTemplateFilename(str(self.pathname) + r"\templates\Протокол_поверки_калибровки.docx",
+                                     "PLTemplateCalReport")
+
+        if os.access(self.PL_TemplateCalCert, 0) != True:
+            self.setTemplateFilename(str(self.pathname) + r"\templates\Сертификат_о_калибровке.docx", "PLTemplateCalCert")
+
+
 
         if CSM != '':
             self.CSM = str(CSM)
@@ -710,6 +882,12 @@ class DemonConvertation(Thread):
                         self.convertation(self.xml_folder + '\\' + i)
                         sleep(1)
             sleep(1)
+
+
+    @staticmethod
+    def correctPath(path):
+        if path[1] != ':': return os.path.dirname(sys.argv[0]).replace('/', '\\') + "\\" + path
+        else: return path
 
     # перевод названия единиц измерения
     @staticmethod
@@ -886,13 +1064,13 @@ class DemonConvertation(Thread):
         # Есть положительные результаты AsReturned
         if len(TestWeightCalibrationAsReturned) > 0:
 
-            rb = xlrd.open_workbook(self.TemplateComparatorApprovalProtocol, formatting_info=True,
+            rb = xlrd.open_workbook(self.TemplateComparatorApprovalReport, formatting_info=True,
                                     on_demand=True)  # открываем книгу
             wb = xlcopy(rb)  # копируем книгу в память
 
             # Печать протокола калибровки
             ws = wb.get_sheet(0)  # выбираем лист протокола поверки
-            ws.footer_str = str('&LПротокол №' + str(self.ApprovalProtocolNum) + '&CСтраница &P из &N').encode('utf-8')
+            ws.footer_str = str('&LПротокол №' + str(self.ApprovalReportNum) + '&CСтраница &P из &N').encode('utf-8')
             ws.header_str = str(self.header).encode('utf-8')
 
             # стиль ячеки выравнивание по центру
@@ -1195,12 +1373,12 @@ class DemonConvertation(Thread):
 
             file_to_save = self.rightFileName(
                 "Протокол поверки компаратора " + MassComparator_Model + " заводской номер " + MassComparator_SerialNumber + "  " + date_time + '.xls')
-            fileApprovalProtocol = self.Excel_folder + '\\' + self.ApprovalProtocolFolder + '\\' + file_to_save
-            wb.save(fileApprovalProtocol)
+            fileApprovalReport = self.Excel_folder + '\\' + self.ApprovalReportFolder + '\\' + file_to_save
+            wb.save(fileApprovalReport)
             logging.debug(
-                'Файл протокола поверки компаратора ' + MassComparator_Model + ' ' + MassComparator_SerialNumber + ' создан: ' + fileApprovalProtocol)
+                'Файл протокола поверки компаратора ' + MassComparator_Model + ' ' + MassComparator_SerialNumber + ' создан: ' + fileApprovalReport)
             if self.autoopen == True:
-                os.startfile(fileApprovalProtocol)
+                os.startfile(fileApprovalReport)
 
     # формирование поверочного протокола Клин
     def ApprovalReportKlin(self, xml_filename):
@@ -1330,8 +1508,8 @@ class DemonConvertation(Thread):
             wb = xlcopy(rb)  # копируем книгу в память
             ws = wb.get_sheet(0)  # выбираем лист протокола поверки
             # ws.name = 'Клинский филиал ФБУ "ЦСМ Московской области", 141600, МО г. Клин, ул. Дзержининского, д.2'
-            # 'Протокол №' + str(self.ApprovalProtocolNum).replace('/', '  ')
-            ws.footer_str = str('&LПротокол №' + str(self.ApprovalProtocolNum) + '&CСтраница &P из &N').encode('utf-8')
+            # 'Протокол №' + str(self.ApprovalReportNum).replace('/', '  ')
+            ws.footer_str = str('&LПротокол №' + str(self.ApprovalReportNum) + '&CСтраница &P из &N').encode('utf-8')
             ws.header_str = str(self.header).encode(
                 'utf-8')
 
@@ -1367,7 +1545,7 @@ class DemonConvertation(Thread):
 
             # КрасЦСМ номер протокола не печатаем
             if self.CSM != "КрасЦСМ":
-                ws.write(1, 3, self.ApprovalProtocolNum)  # номер протокола
+                ws.write(1, 3, self.ApprovalReportNum)  # номер протокола
             ws.write(3, 5, self.EndDate)  # дата поверки
             ws.write(4, 1, self.Company_Name)  # название заказчика
             ws.write(5, 1, self.correctRange(self.TestWeightSet_Range))  # номинальное заначение массы
@@ -1624,8 +1802,8 @@ class DemonConvertation(Thread):
 
             # Составление свидетельства о поверке
 
-            fileApprovalProtocol = self.Excel_folder + '\\' + self.ApprovalProtocolFolder + '\\' + file_to_save
-            fileApprovalProtocol = fileApprovalProtocol.replace(',', ' ')
+            fileApprovalReport = self.Excel_folder + '\\' + self.ApprovalReportFolder + '\\' + file_to_save
+            fileApprovalReport = fileApprovalReport.replace(',', ' ')
 
             if Test_Passed == True:
                 NextYear = datetime.strptime(str(EndDate), "%d.%m.%Y").date()
@@ -1654,17 +1832,17 @@ class DemonConvertation(Thread):
                 fileApprovalCert = fileApprovalCert.replace(',', ' ')
 
                 if self.ApprovalCertEnable == False:
-                    wb.save(fileApprovalProtocol)
+                    wb.save(fileApprovalReport)
                     if self.autoopen == True:
-                        os.startfile(fileApprovalProtocol, 'open')
+                        os.startfile(fileApprovalReport, 'open')
 
                 else:
                     wbCert.save(fileApprovalCert)
-                    wb.save(fileApprovalProtocol)
+                    wb.save(fileApprovalReport)
                     if self.autoopen == True:
                         os.startfile(fileApprovalCert)
                         sleep(1)
-                        os.startfile(fileApprovalProtocol)
+                        os.startfile(fileApprovalReport)
 
             else:  # составляем извещение о непригодности
                 rbError = xlrd.open_workbook(self.TemplateError, formatting_info=True,
@@ -1692,11 +1870,11 @@ class DemonConvertation(Thread):
                     if self.autoopen == True:
                         logging.debug('Извещение о непригодности для ' + self.Company + ' создано: ' + fileError)
                         os.startfile(fileError)
-                if self.CalProtocolEnable:
-                    wb.save(fileApprovalProtocol)
+                if self.CalReportEnable:
+                    wb.save(fileApprovalReport)
                     if self.autoopen == True:
-                        logging.debug('Протокол поверки для ' + self.Company + ' создан: ' + fileApprovalProtocol)
-                        os.startfile(fileApprovalProtocol)
+                        logging.debug('Протокол поверки для ' + self.Company + ' создан: ' + fileApprovalReport)
+                        os.startfile(fileApprovalReport)
 
     # формирование калибровочного протокола Клин
     def CalReportKlin(self, xml_filename):
@@ -1824,7 +2002,7 @@ class DemonConvertation(Thread):
             rb = xlrd.open_workbook(self.TemplateCalReport, formatting_info=True, on_demand=True)  # открываем книгу
             wb = xlcopy(rb)  # копируем книгу в память
             ws = wb.get_sheet(0)  # выбираем лист протокола калибровки
-            ws.footer_str = str('&LПротокол №' + str(self.ApprovalProtocolNum) + '&CСтраница &P из &N').encode('utf-8')
+            ws.footer_str = str('&LПротокол №' + str(self.ApprovalReportNum) + '&CСтраница &P из &N').encode('utf-8')
             ws.header_str = str(
                 r'Клинский филиал ФБУ "ЦСМ Московской области", 141600, МО г. Клин, ул. Дзержининского, д.2').encode(
                 'utf-8')
@@ -1860,7 +2038,7 @@ class DemonConvertation(Thread):
 
             # КрасЦСМ номер протокола не печатаем
             if self.CSM != "КрасЦСМ":
-                ws.write(1, 3, self.CalProtocolNum)  # номер протокола
+                ws.write(1, 3, self.CalReportNum)  # номер протокола
             ws.write(3, 5, self.EndDate)  # дата поверки
             ws.write(4, 1, self.Company_Name)  # название заказчика
             ws.write(5, 1, self.TestWeightSet_Range)  # номинальное заначение массы
@@ -2102,8 +2280,8 @@ class DemonConvertation(Thread):
 
             # Составление сертификата о калибровке
 
-            fileCalProtocol = self.Excel_folder + '\\' + self.CalProtocolFolder + '\\' + file_to_save
-            fileCalProtocol = fileCalProtocol.replace(',', ' ')
+            fileCalReport = self.Excel_folder + '\\' + self.CalReportFolder + '\\' + file_to_save
+            fileCalReport = fileCalReport.replace(',', ' ')
 
             NextYear = datetime.strptime(str(EndDate), "%d.%m.%Y").date()
             NextYear += relativedelta(years=1)
@@ -2135,13 +2313,13 @@ class DemonConvertation(Thread):
                     logging.debug('Сертификат калибровки для ' + self.CSM + ' создан: ' + fileCalCert)
                     os.startfile(fileCalCert, 'open')
 
-            if self.CalProtocolEnable:
-                wb.save(fileCalProtocol)
+            if self.CalReportEnable:
+                wb.save(fileCalReport)
                 if self.autoopen == True:
-                    logging.debug('Протокол калибровки для ' + self.CSM + ' создан: ' + fileCalProtocol)
-                    os.startfile(fileCalProtocol)
+                    logging.debug('Протокол калибровки для ' + self.CSM + ' создан: ' + fileCalReport)
+                    os.startfile(fileCalReport)
 
-    # формирование поверочного протокола
+    # формирование поверочного протокола в формате xls
     def ApprovalReport(self, xml_filename=None):
         # Заполняем протокол поверки если есть положительные результаты AsReturned
         logging.debug('Формирование поверочного протокола для ' + self.Company)
@@ -2179,8 +2357,8 @@ class DemonConvertation(Thread):
 
                 # КрасЦСМ номер протокола не печатаем
                 if self.CSM != "КрасЦСМ":
-                    ws.write(1, 4, self.ApprovalProtocolNum)  # номер протокола
-                    self.setNums(self.ApprovalProtocolNum, 'ApprovalProtocolNum')
+                    ws.write(1, 4, self.ApprovalReportNum)  # номер протокола
+                    self.setNums(self.ApprovalReportNum, 'ApprovalReportNum')
                 ws.write(2, 1, self.EndDate)  # дата поверки
                 ws.write(3, 1, self.CI_Name)  # наименование СИ
                 ws.write(2, 6, self.TestWeightSet_AccuracyClass)  # класс точности
@@ -2341,8 +2519,8 @@ class DemonConvertation(Thread):
 
                 # Составление свидетельства о поверке
 
-                fileApprovalProtocol = self.Excel_folder + '\\' + self.ApprovalProtocolFolder + '\\' + file_to_save
-                fileApprovalProtocol = fileApprovalProtocol.replace(',', ' ')
+                fileApprovalReport = self.Excel_folder + '\\' + self.ApprovalReportFolder + '\\' + file_to_save
+                fileApprovalReport = fileApprovalReport.replace(',', ' ')
 
                 NextYear = datetime.strptime(str(self.EndDate), "%d.%m.%Y").date()
                 NextYear += relativedelta(years=1)
@@ -2352,16 +2530,16 @@ class DemonConvertation(Thread):
                 Method_ID = str(self.Method_ID).strip('Поверка')
                 if self.ReferenceWeightSet_RegNumber != "":
                     ReferenceWeightSet_RegNumber = ', рег.№ ' + self.ReferenceWeightSet_RegNumber
-                if self.ApprovalProtocolEnable == True:
-                    wb.save(fileApprovalProtocol)
+                if self.ApprovalReportEnable == True:
+                    wb.save(fileApprovalReport)
                     if self.autoopen == True:
                         logging.debug(
-                            'Файл поверочного протокола для ' + self.Company + ' создан: ' + fileApprovalProtocol)
-                        os.startfile(fileApprovalProtocol, 'open')
+                            'Файл поверочного протокола для ' + self.Company + ' создан: ' + fileApprovalReport)
+                        os.startfile(fileApprovalReport, 'open')
         except:
             logging.exception('Ошибка формирования поверочного протокола')
 
-    # формирование протокола калибровки
+    # формирование протокола калибровки в формате xls
     def CalReport(self, xml_filename):
         logging.debug('Формирование протокола калибровки для ' + self.Company)
         tree = etree.parse(xml_filename)
@@ -2525,11 +2703,11 @@ class DemonConvertation(Thread):
 
             # КрасЦСМ номер протокола не печатаем
             if self.CSM != "КрасЦСМ":
-                ws.write(1, 4, self.CalProtocolNum, styleCellBottomCenter)  # номер протокола
+                ws.write(1, 4, self.CalReportNum, styleCellBottomCenter)  # номер протокола
 
                 try:
-                    self.setNums(str(int(self.CalProtocolNum[0:-3]) + 1) + '-' + str(datetime.today().year)[2:],
-                                 'CalProtocolNum')
+                    self.setNums(str(int(self.CalReportNum[0:-3]) + 1) + '-' + str(datetime.today().year)[2:],
+                                 'CalReportNum')
                 except:
                     logging.debug('Ошибка установки номера документа')
 
@@ -2823,21 +3001,21 @@ class DemonConvertation(Thread):
 
             file_to_save = self.rightFileName(
                 TestWeightSet_Comment.strip() + ' ' + Company_Name.strip() + ' ' + TestWeightSet_AccuracyClass.strip() + ' ' + TestWeightSet_SerialNumber.strip() + ' ' + date_time + '.xls')
-            fileCalProtocol = self.Excel_folder + '\\' + self.CalProtocolFolder + '\\' + file_to_save
+            fileCalReport = self.Excel_folder + '\\' + self.CalReportFolder + '\\' + file_to_save
             fileCalCert = self.Excel_folder + '\\' + self.CalCertFolder + r'\Сертификат о калибровке ' + file_to_save
 
             if self.CalCertEnable == False:
-                wb.save(fileCalProtocol)
+                wb.save(fileCalReport)
                 if self.autoopen == True:
-                    logging.debug('Файл протокола клибровки для ' + self.Company + ' создан: ' + fileCalProtocol)
-                    os.startfile(fileCalProtocol)
+                    logging.debug('Файл протокола клибровки для ' + self.Company + ' создан: ' + fileCalReport)
+                    os.startfile(fileCalReport)
             else:
-                wb.save(fileCalProtocol)
+                wb.save(fileCalReport)
                 wbCert.save(fileCalCert)
                 if self.autoopen == True:
-                    logging.debug('Файл протокола клибровки для ' + self.Company + ' создан: ' + fileCalProtocol)
+                    logging.debug('Файл протокола клибровки для ' + self.Company + ' создан: ' + fileCalReport)
                     logging.debug('Файл сертификата о клибровке для ' + self.Company + ' создан: ' + fileCalCert)
-                    os.startfile(fileCalProtocol)
+                    os.startfile(fileCalReport)
                     os.startfile(fileCalCert)
 
     # формирование свидетельства о поверке в формате docx
@@ -2976,7 +3154,7 @@ class DemonConvertation(Thread):
             logging.debug('Файл свидетельства о поверке для ' + self.Company + ' создан: ' + fileApprovalCert)
             os.startfile(fileApprovalCert, 'open')
 
-    # формирование поверочного протокола из docx шаблона
+    # формирование поверочного протокола в формате docx
     def ReportDoc(self):
         try:
             logging.debug('формирование поверочного протокола для ' + self.Company)
@@ -3031,13 +3209,13 @@ class DemonConvertation(Thread):
                 Result = ''
                 DocName = 'Выдан сертфикат о калибровке № ____________'
 
-            DocNumber = self.ApprovalProtocolNum
+            DocNumber = self.ApprovalReportNum
             document.merge(
                 CINamne=str(self.CI_Name),
                 Type=str(Type),
                 Period=str(Period),
                 Result=str(Result),
-                Method=str(ClassReName(self.Method_Name)),
+                Method=str(ClassReName(self.Method_ID + " " + self.Method_Name)),
                 DocName=str(DocName),
                 DocNumber=str(DocNumber),
                 EndDate=str(self.EndDate),
@@ -3077,14 +3255,14 @@ class DemonConvertation(Thread):
                     if len(self.B2[i]) > 0:
                         Diff += '\n'
                         Mesurment += 'B2' + str(r + 1) + ' ' + str(self.B2[i][r]) + '\n'
-                    Mesurment += 'А2' + str(r + 1) + ' ' + str(self.A1[i][r])
+                    Mesurment += 'А2' + str(r + 1) + ' ' + str(self.A2[i][r])
                     if r < len(self.A1[i]) - 1:
                         Mesurment += '\n'
                         Diff += '\n'
                 rows.append({'MTNominal': str(self.TestWeight_Nominal[i]),
                              'MTNominalUnit':str(self.TestWeight_NominalUnit[i]),
                              'MTMesurment': str(Mesurment).replace('.', ','),
-                             'MTDiff': str(Diff).replace('.', '.'),
+                             'MTDiff': str(Diff).replace('.', ','),
                              'MTAvr': str(self.Avr[i]).replace('.', ','),
                              'MTConventionalMassError': str(self.ReferenceWeight_ConventionalMassError[i]).replace('.',
                                                                                                                    ','),
@@ -3099,18 +3277,18 @@ class DemonConvertation(Thread):
             date_time = datetime.now().strftime("%d%m%Y_%H%M%S")
             file_to_save = self.rightFileName(self.Company_Name.strip() + ' ' + self.TestWeightSet_AccuracyClass.strip() + ' ' + self.TestWeightSet_SerialNumber.strip() + ' ' + date_time + '.docx')
 
-            fileApprovalProtocol = self.Excel_folder + '\\' + self.ApprovalProtocolFolder + '\\' + file_to_save
-            fileApprovalProtocol = fileApprovalProtocol.replace(',', ' ')
+            fileApprovalReport = self.Excel_folder + '\\' + self.ApprovalReportFolder + '\\' + file_to_save
+            fileApprovalReport = fileApprovalReport.replace(',', ' ')
 
-            document.write(fileApprovalProtocol)
+            document.write(fileApprovalReport)
             if self.autoopen == True:
-                logging.debug('Файл протокола поверки для ' + self.Company + ' создан: ' + fileApprovalProtocol)
-                os.startfile(fileApprovalProtocol, 'open')
+                logging.debug('Файл протокола поверки для ' + self.Company + ' создан: ' + fileApprovalReport)
+                os.startfile(fileApprovalReport, 'open')
         except:
             logging.exception(
                 'Ошибка формирования протокола для ' + self.Company + 'по шаблону ' + self.TemplateApprovalReport)
 
-    # Калибровочный протокол
+    # Калибровочный протокол в формате docx
     def CalCertDoc(self):
         logging.debug('Формирование сертификата о калибровке для ' + self.Company)
         # указываем путь до шаблона
@@ -3225,7 +3403,7 @@ class DemonConvertation(Thread):
             logging.debug('Файл сертификата о калибровке для ' + self.Company + ' создан: ' + fileCalCert)
             os.startfile(fileCalCert, 'open')
 
-
+    # Извещение о непригодности в формате docx
     def ErrorReportDoc(self):
         logging.debug('Формирование извещения о непригодности для' + self.Company)
         # указываем путь до шаблона
@@ -3320,7 +3498,7 @@ class DemonConvertation(Thread):
             os.startfile(fileError, 'open')
 
     # формирование протокола поверки в формате xlsx
-    def ApprovalProtocolXlsx(self):
+    def ApprovalReportXlsx(self):
         wb = openpyxl.Workbook
         wb = load_workbook(filename=r'C:\Doc\prog\MCLinkReport\templates\Протокол поверки_клин.xlsx', read_only=False)
 
@@ -3339,6 +3517,240 @@ class DemonConvertation(Thread):
         self.Set_Cell(wb, 'EtalonInfo', '2.1.ZТТ.1956.2017')
         self.Set_Cell(wb, 'Cell1', '123,1234')
 
+    # формирование протокола поверки PL docx
+    def PLApprovalReport(self):
+        plink_Report_Template_doc = MailMerge(self.PL_TemplateApprovalReport)
+
+        plink_Report_Template_doc.merge(
+            CalibDate=self.PL_CalibDate,
+            NextCalibDate=self.PL_NextCalibDate,
+            CalibCustomN=self.PL_CalibCustomN,
+            Scale_Name=self.PL_Scale_Name,
+            Scale_SerialNumber=self.PL_Scale_SerialNumber,
+            Pipette_PipetteType_TypeInfo=self.PL_Pipette_PipetteType_TypeInfo,
+            Pipette_Model=self.PL_Pipette_Model,
+            Pipette_PipetteType_VolumeInfo=self.PL_Pipette_PipetteType_VolumeInfo,
+            Pipette_SerialNumber=self.PL_Pipette_SerialNumber,
+            AirTemp=self.PL_AirTemp,
+            AirPress=self.PL_AirPress,
+            AirHum=self.PL_AirHum,
+            Method_Name=self.PL_Method_Name,
+            VerifUser_FullName=self.PL_VerifUser_FullName
+        )
+
+        plink_Report_Template_doc.write('plink_temp.docx')
+
+        Chanels = self.PL_data['Channels']['Channel']
+        for Chanel in Chanels:
+            Nominals = Chanel['Nominals']['Nominal']
+            for Nominal in Nominals:
+                doc = MailMerge(self.PL_TemplateApprovalReportTable)
+                OrderN = Nominal['OrderN']
+                Weighings = Nominal['Weighings']['Weighing']
+                ChannelN = Nominal['ChannelN']
+                NominalValue = Nominal['NominalValue']
+                VolumeUnit = Nominal['VolumeUnit']
+                AbsDeviation = Nominal['AbsDeviation']
+                RelDeviation = Nominal['RelDeviation']
+                RelSKO = Nominal['RelSKO']
+                doc.merge(
+                    ChannelN=str(Nominal['ChannelN']),
+                    NominalValue=str(Nominal['NominalValue']),
+                    VolumeUnit=str(Nominal['VolumeUnit']),
+                    AbsDeviation=str(Nominal['AbsDeviation']),
+                    RelDeviation=str(Nominal['RelDeviation']),
+                    RelSKO=str(Nominal['RelSKO'])
+                )
+                rows = list()
+                for Weighing in Weighings:
+                    rows.append({
+                        'OrderN': str(Weighing['OrderN']),
+                        'Weight': str(Weighing['Weight']),
+                        'Volume': str(Weighing['Volume']
+                                      )})
+                doc.merge_rows('OrderN', rows)
+                doc.write('Chanel' + str(ChannelN) + 'V' + str(OrderN) + '.docx')
+
+            Chanel1V1_body = None
+            Chanel1V2_body = None
+            Chanel1V3_body = None
+            Chanel2V1_body = None
+            Chanel2V2_body = None
+            Chanel2V3_body = None
+            try:
+                Chanel1V1_doc = docx.Document('Chanel1V1.docx');
+                Chanel1V1_body = Chanel1V1_doc.element.body
+            except:
+                empty_doc = docx.Document()
+                empty_doc.add_heading('', 1)
+                Chanel1V1_body = empty_doc.element.body
+
+            try:
+                Chanel1V2_doc = docx.Document('Chanel1V2.docx');
+                Chanel1V2_body = Chanel1V2_doc.element.body
+            except:
+                empty_doc = docx.Document()
+                empty_doc.add_heading('', 1)
+                Chanel1V2_body = empty_doc.element.body
+
+            try:
+                Chanel1V3_doc = docx.Document('Chanel1V3.docx');
+                Chanel1V3_body = Chanel1V3_doc.element.body
+            except:
+                empty_doc = docx.Document()
+                empty_doc.add_heading('', 1)
+                Chanel1V3_body = empty_doc.element.body
+
+            try:
+                Chanel2V1_doc = docx.Document('Chanel2V1.docx');
+                Chanel2V1_body = Chanel2V1_doc.element.body
+            except:
+                empty_doc = docx.Document()
+                empty_doc.add_heading('', 1)
+                Chanel2V1_body = empty_doc.element.body
+
+            try:
+                Chanel2V2_doc = docx.Document('Chanel2V2.docx');
+                Chanel2V2_body = Chanel2V2_doc.element.body
+            except:
+                empty_doc = docx.Document()
+                empty_doc.add_heading('', 1)
+                Chanel2V2_body = empty_doc.element.body
+
+            try:
+                Chanel2V3_doc = docx.Document('Chanel2V3.docx');
+                Chanel2V3_body = Chanel2V3_doc.element.body
+            except:
+                empty_doc = docx.Document()
+                empty_doc.add_heading('', 1)
+                Chanel2V3_body = empty_doc.element.body
+
+        maindoc = docx.Document('plink_temp.docx')
+        doc_body = maindoc._element.body
+
+        try:
+            Chanel1V1_par = self.get_bookmark_par_element(maindoc, 'Chanel1V1')
+            Chanel1V2_par = self.get_bookmark_par_element(maindoc, 'Chanel1V2')
+            Chanel1V3_par = self.get_bookmark_par_element(maindoc, 'Chanel1V3')
+            Chanel2V1_par = self.get_bookmark_par_element(maindoc, 'Chanel2V1')
+            Chanel2V2_par = self.get_bookmark_par_element(maindoc, 'Chanel2V2')
+            Chanel2V3_par = self.get_bookmark_par_element(maindoc, 'Chanel2V3')
+        except:
+            pass
+
+        Chanel1V1_parent = Chanel1V1_par.getparent()
+        Chanel1V2_parent = Chanel1V2_par.getparent()
+        Chanel1V3_parent = Chanel1V3_par.getparent()
+        Chanel2V1_parent = Chanel2V1_par.getparent()
+        Chanel2V2_parent = Chanel2V2_par.getparent()
+        Chanel2V3_parent = Chanel2V3_par.getparent()
+
+        Chanel1V1_index = Chanel1V1_parent.index(Chanel1V1_par) + 1
+        Chanel1V2_index = Chanel1V2_parent.index(Chanel1V2_par) + 1
+        Chanel1V3_index = Chanel1V3_parent.index(Chanel1V3_par) + 1
+        Chanel2V1_index = Chanel2V1_parent.index(Chanel2V1_par) + 1
+        Chanel2V2_index = Chanel2V2_parent.index(Chanel2V2_par) + 1
+        Chanel2V3_index = Chanel2V3_parent.index(Chanel2V3_par) + 1
+        for child in Chanel1V1_body:
+            Chanel1V1_parent.insert(Chanel1V1_index, child)
+            Chanel1V1_index = Chanel1V1_index + 1
+        for child in Chanel1V2_body:
+            Chanel1V2_parent.insert(Chanel1V2_index, child)
+            Chanel1V2_index = Chanel1V2_index + 1
+        for child in Chanel1V3_body:
+            Chanel1V3_parent.insert(Chanel1V3_index, child)
+            Chanel1V3_index = Chanel1V3_index + 1
+        for child in Chanel2V1_body:
+            Chanel2V1_parent.insert(Chanel2V1_index, child)
+            Chanel2V1_index = Chanel2V1_index + 1
+        for child in Chanel2V2_body:
+            Chanel2V2_parent.insert(Chanel2V2_index, child)
+            Chanel2V2_index = Chanel2V2_index + 1
+        for child in Chanel2V3_body:
+            Chanel2V3_parent.insert(Chanel2V3_index, child)
+            Chanel2V3_index = Chanel2V3_index + 1
+
+        Chanel1V1_parent.remove(Chanel1V1_par)
+        Chanel1V2_parent.remove(Chanel1V2_par)
+        Chanel1V3_parent.remove(Chanel1V3_par)
+
+        Chanel2V1_parent.remove(Chanel2V1_par)
+        Chanel2V2_parent.remove(Chanel2V2_par)
+        Chanel2V3_parent.remove(Chanel2V3_par)
+        fileApprovalReport = self.NewFileName(fileType=self.PLApprovalReport)
+        maindoc.save(fileApprovalReport)
+        if self.autoopen == True:
+            logging.debug('Файл протокола поверки из Pipette Link для ' + self.PL_Pipette_Owner_Name + ' создан: ' + fileApprovalReport)
+            os.startfile(fileApprovalReport, 'open')
+
+    # формирование свидетельства о поверке PL docx
+    def PLApprovalCert(self):
+        plink_Report_Template_doc = MailMerge(self.PL_TemplateApprovalCert)
+
+        plink_Report_Template_doc.merge(
+            CalibDate=self.PL_CalibDate,
+            NextCalibDate=self.PL_NextCalibDate,
+            CalibCustomN=self.PL_CalibCustomN,
+            Scale_Name=self.PL_Scale_Name,
+            Scale_SerialNumber=self.PL_Scale_SerialNumber,
+            Pipette_PipetteType_TypeInfo=self.PL_Pipette_PipetteType_TypeInfo,
+            Pipette_Model=self.PL_Pipette_Model,
+            Pipette_PipetteType_VolumeInfo=self.PL_Pipette_PipetteType_VolumeInfo,
+            Pipette_SerialNumber=self.PL_Pipette_SerialNumber,
+            AirTemp=self.PL_AirTemp,
+            AirPress=self.PL_AirPress,
+            AirHum=self.PL_AirHum,
+            Method_Name=self.PL_Method_Name,
+            HeadFIO = self.HeadFIO,
+            VerifUser_FullName=self.PL_VerifUser_FullName,
+            Owner_Name=self.PLPipette_Owner_Name,
+            Owner_INN=self.PLPipette_Owner_INN,
+            DayCal=str(datetime.strftime(self.PL_NextCalibDate, "%d")),
+            MounthCal=str(months[self.PL_NextCalibDate.month - 1]),
+            YearCal=str(datetime.strftime(self.PL_NextCalibDate, "%Y"))
+        )
+
+        Chanels = self.PL_data['Chanels']
+        rows = list()
+        for Chanel in Chanels:
+            Nominals = Chanel['Noninals']
+            for Nominal in Nominals:
+                OrderN = Nominal['OrderN']
+                Weighings = Nominal['Weighings']['Weighing']
+                ChannelN = Nominal['ChannelN']
+                NominalValue = Nominal['NominalValue']
+                VolumeUnit = Nominal['VolumeUnit']
+                AbsDeviation = Nominal['AbsDeviation']
+                RelDeviation = Nominal['RelDeviation']
+                RelSKO = Nominal['RelSKO']
+                rows.append({
+                    'ChanelVolume':str('Канал ' + str(ChannelN) + 'Объем: ' + str(Nominal['NominalValue']) + str(Nominal['VolumeUnit'])),
+                    'AbsDeviation':str(Nominal['AbsDeviation']),
+                    'RelDeviation':str(Nominal['RelDeviation']),
+                    'RelSKO':str(Nominal['RelSKO'])
+                             })
+        plink_Report_Template_doc.merge_rows('ChanelVolume', rows)
+        fileCertReport = self.NewFileName(fileType=self.PLApprovalCert)
+        plink_Report_Template_doc.write(fileCertReport)
+        if self.autoopen == True:
+            logging.debug('Файл свидетельство о поверке из Pipette Link для ' + self.PL_Pipette_Owner_Name + ' создан: ' + fileCertReport)
+            os.startfile(fileCertReport, 'open')
+
+    # именование файла
+
+    def NewFileName(self, fileType):
+        date_time = datetime.now().strftime("%d%m%Y_%H%M%S")
+        FileName = ''
+        if fileType == self.PLApprovalReport:
+            file_to_save = self.rightFileName(self.PL_Pipette_Owner_Name.strip() + ' ' + self.PL_Pipette_SerialNumber.strip() + ' ' + date_time + '.docx')
+            FileName = self.Excel_folder + '\\' + self.ApprovalReportFolder + '\\' + file_to_save
+        if fileType == self.PLApprovalCert:
+            file_to_save = self.rightFileName(self.PL_Pipette_Owner_Name + ' ' + self.PL_Pipette_SerialNumber.strip() + ' ' + date_time + '.docx')
+            FileName = self.Excel_folder + '\\' + self.ApprovalCertFolder + '\\' + file_to_save
+        else:
+            FileName = self.Excel_folder + '\\' + date_time + '.docx'
+        return FileName
+
     # запуск конвертации
     def convertation(self, xml_filename=None):
         try:
@@ -3350,38 +3762,45 @@ class DemonConvertation(Thread):
                 shutil.copy(logfileName, self.xml_folder + r'\error.txt')
             else:
                 logging.debug('Распознавание файла ' + xml_filename + ' завершено')
-                if 'Поверка компаратора' in self.Method_Name:
-                    logging.debug('Запуск создания протокола поверки компаратора')
-                    self.ComparatorApprovalReport(xml_filename)
-                    logging.debug('Завершение создания протокола поверки компаратора')
-                elif 'Калибровка' in str(self.Method_Name):
-                    if 'Клинский' in self.CSM:
-                        self.CalReportKlin(xml_filename)
-                    else:
-                        # self.CallReport(xml_filename)
-                        self.CalCertDoc()
-                        self.ReportDoc()
-                else:
-                    if 'Красноярский' in self.CSM:
-                        if '.xls' in self.TemplateApprovalReport:
-                            self.ApprovalReport(xml_filename)
-                        elif '.docx' in self.TemplateApprovalReport:
-                            self.ReportDoc()
-                    elif 'Клинский' in self.CSM:
-                        self.ApprovalReportKlin(xml_filename)
-                    else:
-                        if '.xls' in self.TemplateApprovalCert:
-                            self.ApprovalReport(xml_filename)
-                        elif '.docx' in self.TemplateApprovalCert and self.Test_Passed:
-                            self.ApprovalCertDoc()
-                            self.ReportDoc()
-                        elif '.docx' in self.TemplateApprovalCert and not self.Test_Passed:
-                            self.ErrorReportDoc()
+                if self.XML_File_Type == 'MCLink':
+                    if 'Поверка компаратора' in self.Method_Name:
+                        logging.debug('Запуск создания протокола поверки компаратора')
+                        self.ComparatorApprovalReport(xml_filename)
+                        logging.debug('Завершение создания протокола поверки компаратора')
+                    elif 'Калибровка' in str(self.Method_Name):
+                        if 'Клинский' in self.CSM:
+                            self.CalReportKlin(xml_filename)
+                        else:
+                            # self.CallReport(xml_filename)
                             self.CalCertDoc()
                             self.ReportDoc()
+                    else:
+                        if 'Красноярский' in self.CSM:
+                            if '.xls' in self.TemplateApprovalReport:
+                                self.ApprovalReport(xml_filename)
+                            elif '.docx' in self.TemplateApprovalReport:
+                                self.ReportDoc()
+                        elif 'Клинский' in self.CSM:
+                            self.ApprovalReportKlin(xml_filename)
+                        else:
+                            if '.xls' in self.TemplateApprovalCert:
+                                self.ApprovalReport(xml_filename)
+                            elif '.docx' in self.TemplateApprovalCert and self.Test_Passed:
+                                self.ApprovalCertDoc()
+                                self.ReportDoc()
+                            elif '.docx' in self.TemplateApprovalCert and not self.Test_Passed:
+                                self.ErrorReportDoc()
+                                self.CalCertDoc()
+                                self.ReportDoc()
 
-                logging.debug('Удаление файла xml ' + xml_filename)
-                os.remove(xml_filename)
+                if self.XML_File_Type == 'PLink':
+                    if self.PL_data['Method']['MethodType'] == 'Поверка':
+                        if self.PL_ApprovalReportEnable: self.PLApprovalReport()
+                        if self.PL_ApprovalCertEnable: self.PLApprovalCert()
+                if self.XML_File_Type != None:
+                    logging.debug('Удаление файла xml ' + xml_filename)
+                    os.remove(xml_filename)
+                    self.XML_File_Type = None
         except:
             logging.exception('Ошибка преобразования файла ' + xml_filename)
             # Удаляем исходный файл xml
@@ -3392,6 +3811,20 @@ class DemonConvertation(Thread):
                 os.replace(self.logfile, self.xml_folder + r'\error.txt')
             except:
                 pass
+
+    def get_bookmark_par_element(self, document, bookmark_name):
+        doc_element = document._element
+        bookmarks_list = doc_element.findall('.//' + qn('w:bookmarkStart'))
+        bookmark_par = None
+        for bookmark in bookmarks_list:
+            name = bookmark.get(qn('w:name'))
+            if name == bookmark_name:
+                par = bookmark.getparent()
+                if isinstance(par, docx.oxml.CT_P):
+                    bookmark_par = par
+                else:
+                    bookmark_par = None
+        return bookmark_par
 
     # парсинг файла XML
     def ParseXML(self, xml_filename):
@@ -3417,7 +3850,9 @@ class DemonConvertation(Thread):
         self.ReferenceWeight_ConventionalMassErrorUnit.clear()
         self.ExpandedMassUncertainty.clear()
         self.ExpandedMassUncertaintyUnit.clear()
+        self.PL_data = []
 
+        # открываем файл xml
         try:
             logging.debug('Попытка открыть файл ' + xml_filename)
             tree = etree.parse(xml_filename)
@@ -3433,329 +3868,369 @@ class DemonConvertation(Thread):
                 return 'Ошибка открытия файла'
         try:
             root = tree.getroot()
-            WeightSetCalibration = root.find('WeightSetCalibration')
-            ContactOwner = WeightSetCalibration.find('ContactOwner')
-            Company = str(ContactOwner.find('Company').text).strip(' ')
-            City = ContactOwner.find('City')
+            Report = root.tag
+            # XML from MCLink
+            if Report == 'WeightSetCalibrationExport':
+                self.XML_File_Type = 'MCLink'
+                WeightSetCalibration = root.find('WeightSetCalibration')
+                ContactOwner = WeightSetCalibration.find('ContactOwner')
+                Company = str(ContactOwner.find('Company').text).strip(' ')
+                City = ContactOwner.find('City')
 
-            self.Company = Company
-            self.CustomerNumber = str(ContactOwner.find('Company').text).strip(' ')
-            self.CustomerNumber = ContactOwner.get('CustomerNumber')  # ИНН
-            TestWeightSet = WeightSetCalibration.find('TestWeightSet')
+                self.Company = Company
+                self.CustomerNumber = str(ContactOwner.find('Company').text).strip(' ')
+                self.CustomerNumber = ContactOwner.get('CustomerNumber')  # ИНН
+                TestWeightSet = WeightSetCalibration.find('TestWeightSet')
 
-            self.TestWeightSet_Description = TestWeightSet.find('Description').text  # название набора с номером в гр
-            self.TestWeightSet_Comment = TestWeightSet.find('Comment').text  # номер эталона
-            self.TestWeightSet_SerialNumber = TestWeightSet.get('SerialNumber')
-            self.TestWeightSet_AccuracyClass = TestWeightSet.get('AccuracyClass').split(' ')[2]
-            self.TestWeightSet_Manufacturer = TestWeightSet.get('Manufacturer')
-            self.TestWeightSet_InternalID = TestWeightSet.get('InternalID')  # номер клейма предыдущей поверки
-            self.TestWeightSet_Range = self.correctUnit(TestWeightSet.get('Range'))
+                self.TestWeightSet_Description = TestWeightSet.find('Description').text  # название набора с номером в гр
+                self.TestWeightSet_Comment = TestWeightSet.find('Comment').text  # номер эталона
+                self.TestWeightSet_SerialNumber = TestWeightSet.get('SerialNumber')
+                self.TestWeightSet_AccuracyClass = TestWeightSet.get('AccuracyClass').split(' ')[2]
+                self.TestWeightSet_Manufacturer = TestWeightSet.get('Manufacturer')
+                self.TestWeightSet_InternalID = TestWeightSet.get('InternalID')  # номер клейма предыдущей поверки
+                self.TestWeightSet_Range = self.correctUnit(TestWeightSet.get('Range'))
 
-            TestWeightCalibrations = TestWeightSet.find('TestWeightCalibrations')
-            TestWeightCalibrationAsReturned = TestWeightCalibrations.findall('TestWeightCalibrationAsReturned')
-            TestWeightCalibrationAsFound = TestWeightCalibrations.findall('TestWeightCalibrationAsFound')
-            TestWeightSet_AlloyMaterials = TestWeightSet.find('AlloyMaterials')
-            TestWeightSet_AlloyMaterial = TestWeightSet_AlloyMaterials.findall('AlloyMaterial')[0]
-            self.Density = TestWeightSet_AlloyMaterial.get('Density') + \
-                           TestWeightSet_AlloyMaterial.get('DensityUnit')  # плотность испытуемых гирь
+                TestWeightCalibrations = TestWeightSet.find('TestWeightCalibrations')
+                TestWeightCalibrationAsReturned = TestWeightCalibrations.findall('TestWeightCalibrationAsReturned')
+                TestWeightCalibrationAsFound = TestWeightCalibrations.findall('TestWeightCalibrationAsFound')
+                TestWeightSet_AlloyMaterials = TestWeightSet.find('AlloyMaterials')
+                TestWeightSet_AlloyMaterial = TestWeightSet_AlloyMaterials.findall('AlloyMaterial')[0]
+                self.Density = TestWeightSet_AlloyMaterial.get('Density') + \
+                               TestWeightSet_AlloyMaterial.get('DensityUnit')  # плотность испытуемых гирь
 
-            EnvironmentalConditions = WeightSetCalibration.find('EnvironmentalConditions')
-            AirTemperature = EnvironmentalConditions.find('AirTemperature')
-            AirPressure = EnvironmentalConditions.find('AirPressure')
-            Humidity = EnvironmentalConditions.find('Humidity')
-            AirDensity = EnvironmentalConditions.find('AirDensity')
-            Methods = WeightSetCalibration.find('Methods')
-            Method = Methods.findall('Method')
+                EnvironmentalConditions = WeightSetCalibration.find('EnvironmentalConditions')
+                AirTemperature = EnvironmentalConditions.find('AirTemperature')
+                AirPressure = EnvironmentalConditions.find('AirPressure')
+                Humidity = EnvironmentalConditions.find('Humidity')
+                AirDensity = EnvironmentalConditions.find('AirDensity')
+                Methods = WeightSetCalibration.find('Methods')
+                Method = Methods.findall('Method')
 
-            ReferenceWeightSets = WeightSetCalibration.find('ReferenceWeightSets')
-            ReferenceWeightSet = ReferenceWeightSets.findall('ReferenceWeightSet')
+                ReferenceWeightSets = WeightSetCalibration.find('ReferenceWeightSets')
+                ReferenceWeightSet = ReferenceWeightSets.findall('ReferenceWeightSet')
 
-            ReferenceWeights = WeightSetCalibration.find('ReferenceWeights')
-            ReferenceWeight = ReferenceWeights.findall('ReferenceWeight')
+                ReferenceWeights = WeightSetCalibration.find('ReferenceWeights')
+                ReferenceWeight = ReferenceWeights.findall('ReferenceWeight')
 
-            MassComparators = WeightSetCalibration.find('MassComparators')
-            MassComparator = MassComparators.findall('MassComparator')
+                MassComparators = WeightSetCalibration.find('MassComparators')
+                MassComparator = MassComparators.findall('MassComparator')
 
-            self.TestWeight_CalibrationsCount = TestWeightCalibrations.get('Count')  # количество гирь
-            self.EndDate = WeightSetCalibration.get('EndDate')  # дата поверки
-            self.CertificateNumber = WeightSetCalibration.get('CertificateNumber')  # номер сертификата
-            self.CalibratedBy = WeightSetCalibration.get('CalibratedBy')  # поверитель
-            self.CustomerNumber = ContactOwner.get('CustomerNumber')  # ИНН
+                self.TestWeight_CalibrationsCount = TestWeightCalibrations.get('Count')  # количество гирь
+                self.EndDate = WeightSetCalibration.get('EndDate')  # дата поверки
+                self.CertificateNumber = WeightSetCalibration.get('CertificateNumber')  # номер сертификата
+                self.CalibratedBy = WeightSetCalibration.get('CalibratedBy')  # поверитель
+                self.CustomerNumber = ContactOwner.get('CustomerNumber')  # ИНН
 
-            self.Company_Name = Company  # назвение заказчика
+                self.Company_Name = Company  # назвение заказчика
 
-            self.Address = City.get('ZipCode') + ', ' + City.get('State') + ', ' + ContactOwner.find(
-                'Address').text  # адрес
-            self.AirDensity_Min = self.roundStr(AirDensity.find('Min').text, 4)
-            self.AirDensity_Max = self.roundStr(AirDensity.find('Max').text, 4)
-            self.AirDensity_Avr = self.roundStr(AirDensity.find('Average').text, 4)
-            self.AirDensity_Unit = AirDensity.find('Unit').text
-            self.AirTemperature_Min = self.roundStr(AirTemperature.get('Min'), 2)  # температура мин
-            self.AirTemperature_Max = self.roundStr(AirTemperature.get('Max'), 2)  # температура макс
-            self.AirTemperature_Avr = self.roundStr(AirTemperature.get('Average'), 2)  # температура средняя
-            self.AirTemperature_Unit = AirTemperature.get('Unit')  # размерность температуры
+                self.Address = City.get('ZipCode') + ', ' + City.get('State') + ', ' + ContactOwner.find(
+                    'Address').text  # адрес
+                self.AirDensity_Min = self.roundStr(AirDensity.find('Min').text, 4)
+                self.AirDensity_Max = self.roundStr(AirDensity.find('Max').text, 4)
+                self.AirDensity_Avr = self.roundStr(AirDensity.find('Average').text, 4)
+                self.AirDensity_Unit = AirDensity.find('Unit').text
+                self.AirTemperature_Min = self.roundStr(AirTemperature.get('Min'), 2)  # температура мин
+                self.AirTemperature_Max = self.roundStr(AirTemperature.get('Max'), 2)  # температура макс
+                self.AirTemperature_Avr = self.roundStr(AirTemperature.get('Average'), 2)  # температура средняя
+                self.AirTemperature_Unit = AirTemperature.get('Unit')  # размерность температуры
 
-            self.AirPressure_Min = self.roundStr(AirPressure.get('Min'), 2)  # давление мин
-            self.AirPressure_Max = self.roundStr(AirPressure.get('Max'), 2)  # давление макс
-            self.AirPressure_Avr = self.roundStr(AirPressure.get('Average'), 2)  # давление среднее
-            self.AirPressure_Unit = AirPressure.get('Unit')  # размерность давления
+                self.AirPressure_Min = self.roundStr(AirPressure.get('Min'), 2)  # давление мин
+                self.AirPressure_Max = self.roundStr(AirPressure.get('Max'), 2)  # давление макс
+                self.AirPressure_Avr = self.roundStr(AirPressure.get('Average'), 2)  # давление среднее
+                self.AirPressure_Unit = AirPressure.get('Unit')  # размерность давления
 
-            self.Humidity_Min = self.roundStr(Humidity.get('Min'), 2)  # влажность мин
-            self.Humidity_Max = self.roundStr(Humidity.get('Max'), 2)  # влажность макс
-            self.Humidity_Avr = self.roundStr(Humidity.get('Average'), 2)  # влажность средняя
-            self.Humidity_Unit = Humidity.get('Unit')  # размерность влажности
+                self.Humidity_Min = self.roundStr(Humidity.get('Min'), 2)  # влажность мин
+                self.Humidity_Max = self.roundStr(Humidity.get('Max'), 2)  # влажность макс
+                self.Humidity_Avr = self.roundStr(Humidity.get('Average'), 2)  # влажность средняя
+                self.Humidity_Unit = Humidity.get('Unit')  # размерность влажности
 
-            self.Method_Name = Method[0].get('Name')  # метод поверки
-            self.Method_Process = Method[0].get('Process')  # название процесса поверки
-            self.Method_ID = Method[0].text  # Признак метода Калибровка или Поверка и название метода через пробел
-        except:
-            logging.exception('Ошибка чтения параметров калибровки')
-            return 'Ошибка чтения параметров калибровки'
+                self.Method_Name = Method[0].get('Name')  # метод поверки
+                self.Method_Process = Method[0].get('Process')  # название процесса поверки
+                self.Method_ID = Method[0].text  # Признак метода Калибровка или Поверка и название метода через пробел
+                # чтение параметров компараторов
+                try:
+                    for comp in MassComparator:
+                        self.MassComparators.append({'Index': comp.get('Index'),
+                                                     'Model': comp.get('Model'),
+                                                     'SerialNumber': comp.get('SerialNumber'),
+                                                     'Description': str(comp.find('Description').text)})
 
-        try:
-            for comp in MassComparator:
-                self.MassComparators.append({'Index': comp.get('Index'),
-                                             'Model': comp.get('Model'),
-                                             'SerialNumber': comp.get('SerialNumber'),
-                                             'Description': str(comp.find('Description').text)})
+                    for comp in MassComparator:
+                        self.MassComparators_Info += str(comp.get('Model')) + str(comp.get('SerialNumber')) + str(
+                            comp.find('Description').text)
+                        self.MassComparator_Model.append(comp.get('Model'))  # модели компараторов
+                        self.MassComparator_SerialNumber.append(comp.get('SerialNumber'))  # серийные номера компараторов
+                        self.MassComparator_Description.append(
+                            comp.find('Description').text)  # описание компаратора (дискретность, ско...)
+                except:
+                    logging.exception('Ошибка чтения параметров компараторов')
+                    return 'Ошибка чтения параметров компараторов'
+                # чтение параметров эталонов
+                try:
 
-            for comp in MassComparator:
-                self.MassComparators_Info += str(comp.get('Model')) + str(comp.get('SerialNumber')) + str(
-                    comp.find('Description').text)
-                self.MassComparator_Model.append(comp.get('Model'))  # модели компараторов
-                self.MassComparator_SerialNumber.append(comp.get('SerialNumber'))  # серийные номера компараторов
-                self.MassComparator_Description.append(
-                    comp.find('Description').text)  # описание компаратора (дискретность, ско...)
-        except:
-            logging.exception('Ошибка чтения параметров компараторов')
-            return 'Ошибка чтения параметров компараторов'
+                    for ref in ReferenceWeight:
+                        self.ReferenceWeighs.append({'Index': ref.get('Index'),
+                                                     'SerialNumber': ref.get('SerialNumber'),
+                                                     'NominalWeight': ref.get('NominalWeight'),
+                                                     'NominalWeightUnit': ref.find('NominalWeightUnit'),
+                                                     'WeightId': ref.find('WeightId'),
+                                                     'Density': ref.find('Density'),
+                                                     'Class': ref.find('Class'),
+                                                     'ConventionalMass': ref.find('ConventionalMass'),
+                                                     'ConventionalMassUnit': ref.find('ConventionalMassUnit'),
+                                                     'ConventionalMassError': ref.find('ConventionalMassError'),
+                                                     'ConventionalMassErrorUnit': ref.find('ConventionalMassErrorUnit'),
+                                                     'ExpandedMassErrorUncertainty': ref.find('ExpandedMassErrorUncertainty'),
+                                                     'ExpandedMassErrorUncertaintyUnit': ref.find(
+                                                         'ExpandedMassErrorUncertaintyUnit'),
+                                                     'CertificateNumber': ref.find('CertificateNumber')
+                                                     })
 
-        try:
+                    for ref in ReferenceWeightSet:
+                        refrange = str(ref.get('Range')).split('-')
+                        ReferenceWeightSetName = ''
+                        if len(refrange) == 2:
+                            ReferenceWeightSetName = 'набор гирь'
+                        else:
+                            ReferenceWeightSetName = 'гиря'
 
-            for ref in ReferenceWeight:
-                self.ReferenceWeighs.append({'Index': ref.get('Index'),
-                                             'SerialNumber': ref.get('SerialNumber'),
-                                             'NominalWeight': ref.get('NominalWeight'),
-                                             'NominalWeightUnit': ref.find('NominalWeightUnit'),
-                                             'WeightId': ref.find('WeightId'),
-                                             'Density': ref.find('Density'),
-                                             'Class': ref.find('Class'),
-                                             'ConventionalMass': ref.find('ConventionalMass'),
-                                             'ConventionalMassUnit': ref.find('ConventionalMassUnit'),
-                                             'ConventionalMassError': ref.find('ConventionalMassError'),
-                                             'ConventionalMassErrorUnit': ref.find('ConventionalMassErrorUnit'),
-                                             'ExpandedMassErrorUncertainty': ref.find('ExpandedMassErrorUncertainty'),
-                                             'ExpandedMassErrorUncertaintyUnit': ref.find(
-                                                 'ExpandedMassErrorUncertaintyUnit'),
-                                             'CertificateNumber': ref.find('CertificateNumber')
-                                             })
+                        self.ReferenceWeightSets.append({'SerialNumber': ref.get('SerialNumber'),
+                                                         'Clаss': ref.get('Class'),
+                                                         'Range': ref.get('Range'),
+                                                         'CommonAlloyMaterial': ref.get('CommonAlloyMaterial'),
+                                                         'CommonAlloyMaterialDensity': ref.get('CommonAlloyMaterialDensity'),
+                                                         'CommonAlloyMaterialDensityUnit': ref.get(
+                                                             'CommonAlloyMaterialDensityUnit'),
+                                                         'CommonShape': ref.get('CommonShape'),
+                                                         'LastCalibrationDate': ref.get('LastCalibrationDate'),
+                                                         'CertificateNumber': ref.get('CertificateNumber'),
+                                                         'NextCalibrationDate': ref.get('NextCalibrationDate'),
+                                                         'Comment': ref.find('Comment').text,
+                                                         'ReferenceWeightSetName': ReferenceWeightSetName
+                                                         })
+                        self.ReferenceWeightSet_SerialNumber.append(ref.get('SerialNumber'))  # серийный номер набора эталонов
+                        self.ReferenceWeightSet_Class.append(ref.get('Class'))  # классы эталонных наборов
+                        self.ReferenceWeightSet_Range.append(ref.get('Range'))  # диапазон эталонных гирь
+                        self.ReferenceWeightSet_RegNumber.append(ref.find('Comment').text)
+                        self.ReferenceWeightSet_NextCalibrationDate.append(ref.get('NextCalibrationDate'))
 
-            for ref in ReferenceWeightSet:
-                refrange = str(ref.get('Range')).split('-')
-                ReferenceWeightSetName = ''
-                if len(refrange) == 2:
-                    ReferenceWeightSetName = 'набор гирь'
-                else:
-                    ReferenceWeightSetName = 'гиря'
+                except:
+                    logging.exception('Ошибка чтения параметров эталонов')
+                    return 'Ошибка чтения параметров эталонов'
 
-                self.ReferenceWeightSets.append({'SerialNumber': ref.get('SerialNumber'),
-                                                 'Clаss': ref.get('Class'),
-                                                 'Range': ref.get('Range'),
-                                                 'CommonAlloyMaterial': ref.get('CommonAlloyMaterial'),
-                                                 'CommonAlloyMaterialDensity': ref.get('CommonAlloyMaterialDensity'),
-                                                 'CommonAlloyMaterialDensityUnit': ref.get(
-                                                     'CommonAlloyMaterialDensityUnit'),
-                                                 'CommonShape': ref.get('CommonShape'),
-                                                 'LastCalibrationDate': ref.get('LastCalibrationDate'),
-                                                 'CertificateNumber': ref.get('CertificateNumber'),
-                                                 'NextCalibrationDate': ref.get('NextCalibrationDate'),
-                                                 'Comment': ref.find('Comment').text,
-                                                 'ReferenceWeightSetName': ReferenceWeightSetName
-                                                 })
-                self.ReferenceWeightSet_SerialNumber.append(ref.get('SerialNumber'))  # серийный номер набора эталонов
-                self.ReferenceWeightSet_Class.append(ref.get('Class'))  # классы эталонных наборов
-                self.ReferenceWeightSet_Range.append(ref.get('Range'))  # диапазон эталонных гирь
-                self.ReferenceWeightSet_RegNumber.append(ref.find('Comment').text)
-                self.ReferenceWeightSet_NextCalibrationDate.append(ref.get('NextCalibrationDate'))
+                try:
+                    self.ErrorResults = []
+                    # Есть отрицательные результаты или ошибочно записанные AsFound
+                    if len(TestWeightCalibrationAsFound) > 0:
+                        for found in TestWeightCalibrationAsFound:
+                            Nominal = float(str(found.find('Nominal').text).replace(',', '.'))
+                            u = 1
+                            eu = 1
+                            NominalUnit = str(found.find('NominalUnit').text)
 
-        except:
-            logging.exception('Ошибка чтения параметров эталонов')
-            return 'Ошибка чтения параметров эталонов'
+                            if NominalUnit == 'kg': u = 1000
+                            if NominalUnit == 'mg': u = 0.001
+                            if NominalUnit == 'ug': u = 0.000001
+                            Error = float(str(found.find('ConventionalMassCorrection').text).replace(',', '.'))
+                            ErrorUnit = self.correctUnit(found.find('ConventionalMassCorrectionUnit').text)
+                            if ErrorUnit == 'kg': eu = 1000
+                            if ErrorUnit == 'mg': eu = 0.001
+                            if ErrorUnit == 'ug': eu = 0.000001
 
-        self.Test_Passed = True
+                            Tolerance = float(str(found.find('Tolerance').text).replace(',', '.'))
+                            # Отрицательный результат
+                            if abs(Error * eu) < 0.1 * Nominal * u and abs(Error) > Tolerance:
+                                TestWeightCalibrationAsReturned.append(found)
+                                TestWeightCalibrationAsFound.remove(found)
+                                self.Test_Passed = False
 
-        try:
-            self.ErrorResults = []
-            # Есть отрицательные результаты или ошибочно записанные AsFound
-            if len(TestWeightCalibrationAsFound) > 0:
-                for found in TestWeightCalibrationAsFound:
-                    Nominal = float(str(found.find('Nominal').text).replace(',', '.'))
-                    u = 1
-                    eu = 1
-                    NominalUnit = str(found.find('NominalUnit').text)
-
-                    if NominalUnit == 'kg': u = 1000
-                    if NominalUnit == 'mg': u = 0.001
-                    if NominalUnit == 'ug': u = 0.000001
-                    Error = float(str(found.find('ConventionalMassCorrection').text).replace(',', '.'))
-                    ErrorUnit = self.correctUnit(found.find('ConventionalMassCorrectionUnit').text)
-                    if ErrorUnit == 'kg': eu = 1000
-                    if ErrorUnit == 'mg': eu = 0.001
-                    if ErrorUnit == 'ug': eu = 0.000001
-
-                    Tolerance = float(str(found.find('Tolerance').text).replace(',', '.'))
-                    # Отрицательный результат
-                    if abs(Error * eu) < 0.1 * Nominal * u and abs(Error) > Tolerance:
-                        TestWeightCalibrationAsReturned.append(found)
-                        TestWeightCalibrationAsFound.remove(found)
-                        self.Test_Passed = False
-
-                        self.ErrorResults.append({'NominalID': str(found.find('WeightID').text).strip('\n').strip(' ') +
-                                                               str(Nominal).replace('.', ','),
-                                                  'Error': str(Error).replace('.', ',') + str(ErrorUnit)})
-                    # Ошибочно записанный положительный результат
-                    elif abs(Error) <= Tolerance:
-                        TestWeightCalibrationAsReturned.append(found)
-                        # TestWeightCalibrationAsFound.remove(found)
+                                self.ErrorResults.append({'NominalID': str(found.find('WeightID').text).strip('\n').strip(' ') +
+                                                                       str(Nominal).replace('.', ','),
+                                                          'Error': str(Error).replace('.', ',') + str(ErrorUnit)})
+                            # Ошибочно записанный положительный результат
+                            elif abs(Error) <= Tolerance:
+                                TestWeightCalibrationAsReturned.append(found)
+                                # TestWeightCalibrationAsFound.remove(found)
+                            else:
+                                # TestWeightCalibrationAsFound.remove(found)
+                                self.Test_Passed = False
                     else:
-                        # TestWeightCalibrationAsFound.remove(found)
-                        self.Test_Passed = False
-            else:
-                self.Test_Passed = True
-        except:
-            logging.exception('Ошибка проверки результатов')
-            return 'Ошибка проверки результатов'
+                        self.Test_Passed = True
+                except:
+                    logging.exception('Ошибка проверки результатов')
+                    return 'Ошибка проверки результатов'
 
-        # Заполняем протокол поверки если есть положительные результаты AsReturned
-        if len(TestWeightCalibrationAsReturned) > 0:
-            try:
-                if self.TestWeight_CalibrationsCount == '1':
-                    self.CI_Name = 'Гиря'
-                else:
-                    self.CI_Name = 'Набор гирь'
-
-                for i in TestWeightCalibrationAsReturned:
-                    Nominal = i.find('Nominal').text
-                    WeightID = i.find('WeightID').text
-                    self.TestWeight_WeightId.append(WeightID)
-                    Index = i.find('ReferenceWeight').text
-                    Tolerance = i.find('Tolerance').text
-                    ReferenceWeight_ConventionalMassError = 0
-                    ReferenceWeight_ConventionalMassErrorUnit = ''
-                    for j in ReferenceWeight:
-                        if Index == j.get('Index'):
-                            ReferenceWeight_ConventionalMassError = j.get('ConventionalMassError')
-                            self.ReferenceWeight_ConventionalMassError.append(ReferenceWeight_ConventionalMassError)
-                            ReferenceWeight_ConventionalMassErrorUnit = self.correctUnit(
-                                j.get('ConventionalMassErrorUnit'))
-                            self.ReferenceWeight_ConventionalMassErrorUnit.append(
-                                ReferenceWeight_ConventionalMassErrorUnit)
-                    if self.TestWeight_CalibrationsCount == '1':
-                        self.TestWeight_Nominal.append((str(Nominal).strip('\n').strip(' ')))
-                    else:
-                        self.TestWeight_Nominal.append(str(WeightID + Nominal).strip('\n').strip(' '))
-                    self.TestWeight_NominalUnit.append(self.correctUnit(i.find('NominalUnit').text))
-
-                    self.TestWeight_Tolerance.append(float(Tolerance.replace(',', '.')))
-                    MeasurementReadings = i.find('MeasurementReadings')
+                # Заполняем протокол поверки если есть положительные результаты AsReturned
+                if len(TestWeightCalibrationAsReturned) > 0:
                     try:
-                        WeightReading = MeasurementReadings.findall('WeightReading')
-                        A1 = []
-                        A2 = []
-                        B1 = []
-                        B2 = []
-                        Diff = []
-                        round_number = 5
-                        # Определение метода
-                        StepSeriesIndex = ''
-                        for wr in WeightReading:
-                            StepSeriesIndex += wr.get('Step') + wr.get('SeriesIndex')
+                        if self.TestWeight_CalibrationsCount == '1':
+                            self.CI_Name = 'Гиря'
+                        else:
+                            self.CI_Name = 'Набор гирь'
 
-                        Method = StepSeriesIndex[0:6]
-                        # ABA
-                        if Method == 'A1B1A1' or Method == '(A)1B1':  # 1 ABA
-                            for cicle in range(int(len(WeightReading) / 3)):
-                                round_number = abs(decimal.Decimal(
-                                    str(WeightReading[cicle * 3].get('WeightReading')).replace(',',
-                                                                                               '.')).as_tuple().exponent) + 1
-                                A1.append(float(str(WeightReading[cicle * 3].get('WeightReading')).replace(',', '.')))
-                                B1.append(
-                                    float(str(WeightReading[cicle * 3 + 1].get('WeightReading')).replace(',', '.')))
-                                A2.append(
-                                    float(str(WeightReading[cicle * 3 + 2].get('WeightReading')).replace(',', '.')))
-                                Diff.append(round((B1[cicle] - (A1[cicle] + A2[cicle]) / 2), round_number))
+                        for i in TestWeightCalibrationAsReturned:
+                            Nominal = i.find('Nominal').text
+                            WeightID = i.find('WeightID').text
+                            self.TestWeight_WeightId.append(WeightID)
+                            Index = i.find('ReferenceWeight').text
+                            Tolerance = i.find('Tolerance').text
+                            ReferenceWeight_ConventionalMassError = 0
+                            ReferenceWeight_ConventionalMassErrorUnit = ''
+                            for j in ReferenceWeight:
+                                if Index == j.get('Index'):
+                                    ReferenceWeight_ConventionalMassError = j.get('ConventionalMassError')
+                                    self.ReferenceWeight_ConventionalMassError.append(ReferenceWeight_ConventionalMassError)
+                                    ReferenceWeight_ConventionalMassErrorUnit = self.correctUnit(
+                                        j.get('ConventionalMassErrorUnit'))
+                                    self.ReferenceWeight_ConventionalMassErrorUnit.append(
+                                        ReferenceWeight_ConventionalMassErrorUnit)
+                            if self.TestWeight_CalibrationsCount == '1':
+                                self.TestWeight_Nominal.append((str(Nominal).strip('\n').strip(' ')))
+                            else:
+                                self.TestWeight_Nominal.append(str(WeightID + Nominal).strip('\n').strip(' '))
+                            self.TestWeight_NominalUnit.append(self.correctUnit(i.find('NominalUnit').text))
 
-                        if Method == 'A1B1B1':  # 1 ABBA
-                            for cicle in range(int(len(WeightReading) / 4)):
-                                round_number = abs(decimal.Decimal(
-                                    str(WeightReading[cicle * 4].get('WeightReading')).replace(',',
-                                                                                               '.')).as_tuple().exponent) + 1
-                                A1.append(float(str(WeightReading[cicle * 4].get('WeightReading')).replace(',', '.')))
-                                B1.append(
-                                    float(str(WeightReading[cicle * 4 + 1].get('WeightReading')).replace(',', '.')))
-                                B2.append(
-                                    float(str(WeightReading[cicle * 4 + 2].get('WeightReading')).replace(',', '.')))
-                                A2.append(
-                                    float(str(WeightReading[cicle * 4 + 3].get('WeightReading')).replace(',', '.')))
-                                Diff.append(
-                                    round(((B1[cicle] + B2[cicle]) / 2 - (A1[cicle] + A2[cicle]) / 2), round_number))
-                        self.A1.append(A1)
-                        self.A2.append(A2)
-                        self.B1.append(B1)
-                        self.B2.append(B2)
-                        self.Diff.append(Diff)
-                        Avr = round(mean(Diff), round_number)
-                        self.Avr.append(Avr)
+                            self.TestWeight_Tolerance.append(float(Tolerance.replace(',', '.')))
+                            MeasurementReadings = i.find('MeasurementReadings')
+                            try:
+                                WeightReading = MeasurementReadings.findall('WeightReading')
+                                A1 = []
+                                A2 = []
+                                B1 = []
+                                B2 = []
+                                Diff = []
+                                round_number = 5
+                                # Определение метода
+                                StepSeriesIndex = ''
+                                for wr in WeightReading:
+                                    StepSeriesIndex += wr.get('Step') + wr.get('SeriesIndex')
 
-                        ConventionalMassCorrection = i.find('ConventionalMassCorrection').text
-                        self.ConventionalMassCorrection.append(self.roundStr(ConventionalMassCorrection, round_number))
-                        ConventionalMassCorrectionUnit = i.find('ConventionalMassCorrectionUnit').text
-                        self.ConventionalMassCorrectionUnit.append(self.correctUnit(ConventionalMassCorrectionUnit))
-                        ConventionalMass = i.find('ConventionalMass').text
-                        self.ConventionalMass.append(ConventionalMass)
-                        ConventionalMassUnit = i.find('ConventionalMassUnit').text
-                        self.ConventionalMassUnit.append(self.correctUnit(ConventionalMassUnit))
+                                Method = StepSeriesIndex[0:6]
+                                # ABA
+                                if Method == 'A1B1A1' or Method == '(A)1B1':  # 1 ABA
+                                    for cicle in range(int(len(WeightReading) / 3)):
+                                        round_number = abs(decimal.Decimal(
+                                            str(WeightReading[cicle * 3].get('WeightReading')).replace(',',
+                                                                                                       '.')).as_tuple().exponent) + 1
+                                        A1.append(float(str(WeightReading[cicle * 3].get('WeightReading')).replace(',', '.')))
+                                        B1.append(
+                                            float(str(WeightReading[cicle * 3 + 1].get('WeightReading')).replace(',', '.')))
+                                        A2.append(
+                                            float(str(WeightReading[cicle * 3 + 2].get('WeightReading')).replace(',', '.')))
+                                        Diff.append(round((B1[cicle] - (A1[cicle] + A2[cicle]) / 2), round_number))
 
-                        self.ExpandedMassUncertainty.append(i.find('ExpandedMassUncertainty').text)
-                        ExpandedMassUncertaintyUnit = self.correctUnit(i.find('ExpandedMassUncertaintyUnit').text)
-                        self.ExpandedMassUncertaintyUnit.append(ExpandedMassUncertaintyUnit)
-                        self.TestWeights.append({
-                            'CIName' : str(self.CI_Name).strip('\n').strip(' '),
-                            'Nominal': str(i.find('Nominal').text).strip('\n').strip(' '),
-                            'NominalUnit': self.correctUnit(str(i.find('NominalUnit').text)),
-                            'WeightID': str(i.find('WeightID').text).strip('\n').strip(' '),
-                            'NominalID': str(i.find('WeightID').text).strip('\n').strip(' ') + str(
-                                i.find('Nominal').text).strip('\n').strip(' '),
-                            'Density': str(i.find('Density').text),
-                            'DensityUnit': str(i.find('DensityUnit').text),
-                            'MassComparator': str(i.find('MassComparator').text),
-                            'ReferenceWeight': str(i.find('ReferenceWeight').text),
-                            'ConventionalMassError': str(ReferenceWeight_ConventionalMassError),
-                            'ConventionalMassErrorUnit': self.correctUnit(
-                                str(ReferenceWeight_ConventionalMassErrorUnit)),
-                            'ConventionalMassCorrection': str(i.find('ConventionalMassCorrection').text),
-                            'ConventionalMassCorrectionUnit': self.correctUnit(
-                                str(i.find('ConventionalMassCorrectionUnit').text)),
-                            'ConventionalMass': str(i.find('ConventionalMass').text),
-                            'ConventionalMassUnit': self.correctUnit(str(i.find('ConventionalMassUnit').text)),
-                            'CombinedMassUncertainty': str(i.find('CombinedMassUncertainty').text),
-                            'CombinedMassUncertaintyUnit': self.correctUnit(
-                                str(i.find('CombinedMassUncertaintyUnit').text)),
-                            'ExpandedMassUncertainty': str(i.find('ExpandedMassUncertainty').text),
-                            'ExpandedMassUncertaintyUnit': self.correctUnit(
-                                str(i.find('ExpandedMassUncertaintyUnit').text)),
-                            'ExpansionFactor': str(i.find('ExpansionFactor').text),
-                            'Tolerance': str(i.find('Tolerance').text).replace(',', '.'),
-                            'ToleranceUnit': self.correctUnit(str(i.find('ToleranceUnit').text)),
-                            'CalibrationResult': str(i.find('CalibrationResult').text),
-                            'A1': A1, 'B1': B1, 'B2': B2, 'A2': A2, 'D': Diff, 'Avr': Avr
-                        })
+                                if Method == 'A1B1B1':  # 1 ABBA
+                                    for cicle in range(int(len(WeightReading) / 4)):
+                                        round_number = abs(decimal.Decimal(
+                                            str(WeightReading[cicle * 4].get('WeightReading')).replace(',',
+                                                                                                       '.')).as_tuple().exponent) + 1
+                                        A1.append(float(str(WeightReading[cicle * 4].get('WeightReading')).replace(',', '.')))
+                                        B1.append(
+                                            float(str(WeightReading[cicle * 4 + 1].get('WeightReading')).replace(',', '.')))
+                                        B2.append(
+                                            float(str(WeightReading[cicle * 4 + 2].get('WeightReading')).replace(',', '.')))
+                                        A2.append(
+                                            float(str(WeightReading[cicle * 4 + 3].get('WeightReading')).replace(',', '.')))
+                                        Diff.append(
+                                            round(((B1[cicle] + B2[cicle]) / 2 - (A1[cicle] + A2[cicle]) / 2), round_number))
+                                self.A1.append(A1)
+                                self.A2.append(A2)
+                                self.B1.append(B1)
+                                self.B2.append(B2)
+                                self.Diff.append(Diff)
+                                Avr = round(mean(Diff), round_number)
+                                self.Avr.append(Avr)
+
+                                ConventionalMassCorrection = i.find('ConventionalMassCorrection').text
+                                self.ConventionalMassCorrection.append(self.roundStr(ConventionalMassCorrection, round_number))
+                                ConventionalMassCorrectionUnit = i.find('ConventionalMassCorrectionUnit').text
+                                self.ConventionalMassCorrectionUnit.append(self.correctUnit(ConventionalMassCorrectionUnit))
+                                ConventionalMass = i.find('ConventionalMass').text
+                                self.ConventionalMass.append(ConventionalMass)
+                                ConventionalMassUnit = i.find('ConventionalMassUnit').text
+                                self.ConventionalMassUnit.append(self.correctUnit(ConventionalMassUnit))
+
+                                self.ExpandedMassUncertainty.append(i.find('ExpandedMassUncertainty').text)
+                                ExpandedMassUncertaintyUnit = self.correctUnit(i.find('ExpandedMassUncertaintyUnit').text)
+                                self.ExpandedMassUncertaintyUnit.append(ExpandedMassUncertaintyUnit)
+                                self.TestWeights.append({
+                                    'CIName': str(self.CI_Name).strip('\n').strip(' '),
+                                    'Nominal': str(i.find('Nominal').text).strip('\n').strip(' '),
+                                    'NominalUnit': self.correctUnit(str(i.find('NominalUnit').text)),
+                                    'WeightID': str(i.find('WeightID').text).strip('\n').strip(' '),
+                                    'NominalID': str(i.find('WeightID').text).strip('\n').strip(' ') + str(
+                                        i.find('Nominal').text).strip('\n').strip(' '),
+                                    'Density': str(i.find('Density').text),
+                                    'DensityUnit': str(i.find('DensityUnit').text),
+                                    'MassComparator': str(i.find('MassComparator').text),
+                                    'ReferenceWeight': str(i.find('ReferenceWeight').text),
+                                    'ConventionalMassError': str(ReferenceWeight_ConventionalMassError),
+                                    'ConventionalMassErrorUnit': self.correctUnit(
+                                        str(ReferenceWeight_ConventionalMassErrorUnit)),
+                                    'ConventionalMassCorrection': str(i.find('ConventionalMassCorrection').text),
+                                    'ConventionalMassCorrectionUnit': self.correctUnit(
+                                        str(i.find('ConventionalMassCorrectionUnit').text)),
+                                    'ConventionalMass': str(i.find('ConventionalMass').text),
+                                    'ConventionalMassUnit': self.correctUnit(str(i.find('ConventionalMassUnit').text)),
+                                    'CombinedMassUncertainty': str(i.find('CombinedMassUncertainty').text),
+                                    'CombinedMassUncertaintyUnit': self.correctUnit(
+                                        str(i.find('CombinedMassUncertaintyUnit').text)),
+                                    'ExpandedMassUncertainty': str(i.find('ExpandedMassUncertainty').text),
+                                    'ExpandedMassUncertaintyUnit': self.correctUnit(
+                                        str(i.find('ExpandedMassUncertaintyUnit').text)),
+                                    'ExpansionFactor': str(i.find('ExpansionFactor').text),
+                                    'Tolerance': str(i.find('Tolerance').text).replace(',', '.'),
+                                    'ToleranceUnit': self.correctUnit(str(i.find('ToleranceUnit').text)),
+                                    'CalibrationResult': str(i.find('CalibrationResult').text),
+                                    'A1': A1, 'B1': B1, 'B2': B2, 'A2': A2, 'D': Diff, 'Avr': Avr
+                                })
+                            except:
+                                logging.exception('Ошибка расчета результатов ' + xml_filename)
+                                return 'Ошибка расчета результатов'
                     except:
-                        logging.exception('Ошибка расчета результатов ' + xml_filename)
-                        return 'Ошибка расчета результатов'
-            except:
-                logging.exception('Ошибка чтения параметров калибровки')
-                return 'Ошибка чтения параметров калибровки'
+                        logging.exception('Ошибка чтения параметров калибровки')
+                        return 'Ошибка чтения параметров калибровки'
+            # XML from PipetLink
+            if Report == 'Protocol':
+                self.XML_File_Type = 'PLink'
+
+                plink_shema = xmlschema.XMLSchema('plink.xsd')
+                isValid = plink_shema.is_valid(xml_filename)
+                plink_shema.validate(xml_filename)
+                self.PL_data = plink_shema.to_dict(xml_filename)
+                self.PL_CalibDate = str(self.PL_data['CalibDate'])[:10]
+                self.PL_NextCalibDate = str(self.PL_data['NextCalibDate'])[:10]
+                self.PL_CalibCustomN = str(self.PL_data['CalibCustomN'])
+                self.PL_Scale_Name = str(self.PL_data['Scale']['Name'])
+                self.PL_Scale_SerialNumber = str(self.PL_data['Scale']['SerialNumber'])
+                self.PL_Pipette_PipetteType_TypeInfo = str(self.PL_data['Pipette']['PipetteType']['TypeInfo'])
+                self.PL_Pipette_Model = str(self.PL_data['Pipette']['Model'])
+                self.PL_Pipette_PipetteType_VolumeInfo = str(self.PL_data['Pipette']['PipetteType']['VolumeInfo'])
+                self.PL_Pipette_SerialNumber = str(self.PL_data['Pipette']['SerialNumber'])
+                self.PL_AirTemp = str(self.PL_data['AirTemp'])
+                self.PL_AirPress = str(self.PL_data['AirPress'])
+                self.PL_AirHum = str(self.PL_data['AirHum'])
+                self.PL_Method_Name = str(self.PL_data['Method']['Name'])
+                try:
+                    self.PL_VerifUser_FullName = str(self.PL_data['VerifUser']['FullName'])
+                except:
+                    try:
+                        self.PL_VerifUser_FullName = str(self.PL_data['HeadUser']['FullName'])
+                    except:
+                        self.PL_VerifUser_FullName = ''
+
+                self.PL_Pipette_Owner_Name = str(self.PL_data['Pipette']['Owner']['Name'])
+                self.PL_Pipette_INN = str(self.PL_data['Pipette']['Owner']['INN'])
+                self.PL_Pipette_Adress = str(self.PL_data['Pipette']['Owner']['Address'])
+
+        except:
+            logging.exception(plink_shema.exceptions.XMLSchemaValidationError)
+            logging.exception('Ошибка ParseXML')
+            return 'Ошибка ParseXML'
+
+
+
+
 
     # установка параметров ячейки
     def Set_Cell(self, _wb, name, value):
@@ -3769,7 +4244,7 @@ class DemonConvertation(Thread):
 # класс главного окна
 class MainWindow(QMainWindow):
     demon = DemonConvertation()
-    Title = " Сохранение отчетов MCLink v" + ver
+    Title = " LinkReport v" + ver
 
     # конструктор главного окна
     def __init__(self, parent=None):
@@ -3780,23 +4255,34 @@ class MainWindow(QMainWindow):
         self.ui.btScanFolder.clicked.connect(self.selectXmlFolder)
         self.ui.btDestFolder.clicked.connect(self.selectExcelFolder)
 
-        self.ui.btTemplateApprovalProtocol.clicked.connect(self.selectTemplateApprovalProtocol)
+        self.ui.btTemplateApprovalReport.clicked.connect(self.selectTemplateApprovalReport)
         self.ui.btTemplateApprovalCert.clicked.connect(self.selectTemplateApprovalCert)
-        self.ui.btTemplateCalProtocol.clicked.connect(self.selectTemplateCalProtocol)
+        self.ui.btTemplateCalReport.clicked.connect(self.selectTemplateCalReport)
         self.ui.btTemplateCalCert.clicked.connect(self.selectTemplateCalCert)
         self.ui.btTemplateError.clicked.connect(self.selectTemplateError)
 
-        self.ui.lbTemplateApprovalProtocol.setText(self.demon.TemplateApprovalReport)
+        self.ui.btPLTemplateApprovalReport.clicked.connect(self.PLselectTemplateApprovalReport)
+        self.ui.btPLTemplateApprovalReportTable.clicked.connect(self.PLselectTemplateApprovalReportTable)
+        self.ui.btPLTemplateApprovalCert.clicked.connect(self.PLselectTemplateApprovalCert)
+        self.ui.btPLTemplateCalReport.clicked.connect(self.PLselectTemplateCalReport)
+        self.ui.btPLTemplateCalCert.clicked.connect(self.PLselectTemplateCalCert)
+        self.ui.btPLTemplateError.clicked.connect(self.PLselectTemplateError)
+
+        self.ui.lbTemplateApprovalReport.setText(self.demon.TemplateApprovalReport)
         self.ui.lbTemplateApprovalCert.setText(self.demon.TemplateApprovalCert)
-        self.ui.lbTemplateCalProtocol.setText(self.demon.TemplateCalReport)
+        self.ui.lbTemplateCalReport.setText(self.demon.TemplateCalReport)
         self.ui.lbTemplateCalCert.setText(self.demon.TemplateCalCert)
         self.ui.lbTemplateError.setText(self.demon.TemplateError)
 
+        self.ui.lbPLTemplateApprovalReport.setText(self.demon.PL_TemplateApprovalReport)
+        self.ui.lbPLTemplateApprovalReportTable.setText(self.demon.PL_TemplateApprovalReportTable)
+        self.ui.lbPLTemplateApprovalCert.setText(self.demon.PL_TemplateApprovalCert)
+        self.ui.lbPLTemplateCalReport.setText(self.demon.PLTemplateCalReport)
+        self.ui.lbPLTemplateCalCert.setText(self.demon.PL_TemplateCalCert)
+        self.ui.lbPLTemplateError.setText(self.demon.PL_TemplateError)
+
         self.ui.lbScanFolder.setText(self.demon.xml_folder)
         self.ui.lbDestFolder.setText(self.demon.Excel_folder)
-        self.ui.lbTemplateApprovalProtocol.setText(self.demon.template_filename)
-        self.ui.lbTemplateApprovalProtocol.setText(self.demon.TemplateApprovalReport)
-        self.ui.lbTemplateApprovalCert.setText(self.demon.TemplateApprovalCert)
         self.setWindowTitle(self.demon.CSM + self.Title)
 
         self.ui.edTemplateReserved.setVisible(False)
@@ -3809,35 +4295,63 @@ class MainWindow(QMainWindow):
         self.ui.chbAutoOpen.setChecked(self.demon.autoopen)
         self.ui.chbAutoOpen.clicked.connect(self.changeAutoOpen)
         self.ui.chbAutoDelXML.setVisible(False)
-        # self.statusBar()
-        self.ui.edApprovalProtocolNum.setText(str(self.demon.ApprovalProtocolNum))
+
+        self.ui.edApprovalReportNum.setText(str(self.demon.ApprovalReportNum))
         self.ui.edApprovalCertNum.setText(str(self.demon.ApprovalCertNum))
-        self.ui.edCalProtocolNum.setText(str(self.demon.CalProtocolNum))
+        self.ui.edCalReportNum.setText(str(self.demon.CalReportNum))
         self.ui.edCalCertNum.setText(str(self.demon.CalCertNum))
         self.ui.edErrorNum.setText(str(self.demon.ErrorNum))
 
-        self.ui.btSaveSettings.clicked.connect(self.saveSettings)
-        self.ui.cbxApprovalProtocol.setChecked(self.demon.ApprovalProtocolEnable)
-        self.ui.cbxApprovalSert.setChecked(bool(self.demon.ApprovalCertEnable))
-        self.ui.cbxError.setChecked(bool(self.demon.ErrorEnable))
-        self.ui.cbxCalProtocol.setChecked(bool(self.demon.CalProtocolEnable))
-        self.ui.cbxCalSert.setChecked(bool(self.demon.CalCertEnable))
+        self.ui.edPLApprovalReportNum.setText(str(self.demon.PL_ApprovalReportNum))
+        self.ui.edPLApprovalCertNum.setText(str(self.demon.PL_ApprovalCertNum))
+        self.ui.edPLCalReportNum.setText(str(self.demon.PL_CalReportNum))
+        self.ui.edPLCalCertNum.setText(str(self.demon.PL_CalCertNum))
+        self.ui.edPLErrorNum.setText(str(self.demon.PL_ErrorNum))
 
-        self.ui.cbxApprovalProtocol.clicked.connect(self.setProtocol)
-        self.ui.cbxApprovalSert.clicked.connect(self.setProtocol)
-        self.ui.cbxError.clicked.connect(self.setProtocol)
-        self.ui.cbxCalProtocol.clicked.connect(self.setProtocol)
-        self.ui.cbxCalSert.clicked.connect(self.setProtocol)
+
+        self.ui.btSaveSettings.clicked.connect(self.saveSettings)
+        self.ui.cbxApprovalReport.setChecked(self.demon.ApprovalReportEnable)
+        self.ui.cbxApprovalCert.setChecked(bool(self.demon.ApprovalCertEnable))
+        self.ui.cbxError.setChecked(bool(self.demon.ErrorEnable))
+        self.ui.cbxCalReport.setChecked(bool(self.demon.CalReportEnable))
+        self.ui.cbxCalCert.setChecked(bool(self.demon.CalCertEnable))
+
+        self.ui.cbxPLApprovalReport.setChecked(self.demon.PL_ApprovalReportEnable)
+        self.ui.cbxPLApprovalCert.setChecked(bool(self.demon.PL_ApprovalCertEnable))
+        self.ui.cbxPLError.setChecked(bool(self.demon.PL_ErrorEnable))
+        self.ui.cbxPLCalReport.setChecked(bool(self.demon.PL_CalReportEnable))
+        self.ui.cbxPLCalCert.setChecked(bool(self.demon.PL_CalCertEnable))
+
+
+        self.ui.cbxApprovalReport.clicked.connect(self.setReport)
+        self.ui.cbxApprovalCert.clicked.connect(self.setReport)
+        self.ui.cbxError.clicked.connect(self.setReport)
+        self.ui.cbxCalReport.clicked.connect(self.setReport)
+        self.ui.cbxCalCert.clicked.connect(self.setReport)
+
+        self.ui.cbxPLApprovalReport.clicked.connect(self.setReport)
+        self.ui.cbxPLApprovalCert.clicked.connect(self.setReport)
+        self.ui.cbxPLError.clicked.connect(self.setReport)
+        self.ui.cbxPLCalReport.clicked.connect(self.setReport)
+        self.ui.cbxPLCalCert.clicked.connect(self.setReport)
+
+
         if self.demon.runned == True:
             self.start()
 
     # устанавливаем признаки протоколов согласно установленным галкам на окне
-    def setProtocol(self):
-        self.demon.setProtocol(1, self.ui.cbxApprovalProtocol.isChecked())
-        self.demon.setProtocol(2, self.ui.cbxApprovalSert.isChecked())
-        self.demon.setProtocol(3, self.ui.cbxError.isChecked())
-        self.demon.setProtocol(4, self.ui.cbxCalProtocol.isChecked())
-        self.demon.setProtocol(5, self.ui.cbxCalSert.isChecked())
+    def setReport(self):
+        self.demon.setReport(1, self.ui.cbxApprovalReport.isChecked())
+        self.demon.setReport(2, self.ui.cbxApprovalCert.isChecked())
+        self.demon.setReport(3, self.ui.cbxError.isChecked())
+        self.demon.setReport(4, self.ui.cbxCalReport.isChecked())
+        self.demon.setReport(5, self.ui.cbxCalCert.isChecked())
+        self.demon.setReport(11, self.ui.cbxPLApprovalReport.isChecked())
+        self.demon.setReport(12, self.ui.cbxPLApprovalCert.isChecked())
+        self.demon.setReport(13, self.ui.cbxPLError.isChecked())
+        self.demon.setReport(14, self.ui.cbxPLCalReport.isChecked())
+        self.demon.setReport(15, self.ui.cbxPLCalCert.isChecked())
+
 
     # сохраняем настройки из окна
     def saveSettings(self):
@@ -3847,23 +4361,46 @@ class MainWindow(QMainWindow):
         self.demon.setAutoDelXML(self.ui.chbAutoDelXML.isChecked())
         self.demon.setAutoStart(self.demon.runned)
 
-        self.demon.setNums(self.ui.edApprovalProtocolNum.text(), 'ApprovalProtocolNum')
+        self.demon.setNums(self.ui.edApprovalReportNum.text(), 'ApprovalReportNum')
         self.demon.setNums(self.ui.edApprovalCertNum.text(), 'ApprovalCertNum')
-        self.demon.setNums(self.ui.edCalProtocolNum.text(), 'CalProtocolNum')
+        self.demon.setNums(self.ui.edCalReportNum.text(), 'CalReportNum')
         self.demon.setNums(self.ui.edCalCertNum.text(), 'CalCertNum')
         self.demon.setNums(self.ui.edErrorNum.text(), 'ErrorNum')
 
-        self.demon.setTemplateFilename(self.ui.lbTemplateApprovalProtocol.text(), 'TemplateApprovalProtocol')
+        self.demon.setNums(self.ui.edPLApprovalReportNum.text(), 'PLApprovalReportNum')
+        self.demon.setNums(self.ui.edPLApprovalCertNum.text(), 'PLApprovalCertNum')
+        self.demon.setNums(self.ui.edPLCalReportNum.text(), 'PLCalReportNum')
+        self.demon.setNums(self.ui.edPLCalCertNum.text(), 'PLCalCertNum')
+        self.demon.setNums(self.ui.edPLErrorNum.text(), 'PLErrorNum')
+
+
+        self.demon.setTemplateFilename(self.ui.lbTemplateApprovalReport.text(), 'TemplateApprovalReport')
         self.demon.setTemplateFilename(self.ui.lbTemplateApprovalCert.text(), 'TemplateApprovalCert')
-        self.demon.setTemplateFilename(self.ui.lbTemplateCalProtocol.text(), 'TemplateCalProtocol')
+        self.demon.setTemplateFilename(self.ui.lbTemplateCalReport.text(), 'TemplateCalReport')
         self.demon.setTemplateFilename(self.ui.lbTemplateCalCert.text(), 'TemplateCalCert')
         self.demon.setTemplateFilename(self.ui.lbTemplateError.text(), 'TemplateError')
 
-        self.demon.setProtocol(1, self.ui.cbxApprovalProtocol.isChecked())
-        self.demon.setProtocol(2, self.ui.cbxApprovalSert.isChecked())
-        self.demon.setProtocol(3, self.ui.cbxError.isChecked())
-        self.demon.setProtocol(4, self.ui.cbxCalProtocol.isChecked())
-        self.demon.setProtocol(5, self.ui.cbxCalSert.isChecked())
+        self.demon.setTemplateFilename(self.ui.lbPLTemplateApprovalReport.text(), 'PLTemplateApprovalReport')
+        self.demon.setTemplateFilename(self.ui.lbPLTemplateApprovalReportTable.text(), 'PLTemplateApprovalReportTable')
+        self.demon.setTemplateFilename(self.ui.lbPLTemplateApprovalCert.text(), 'PLTemplateApprovalCert')
+        self.demon.setTemplateFilename(self.ui.lbPLTemplateCalReport.text(), 'PLTemplateCalReport')
+        self.demon.setTemplateFilename(self.ui.lbPLTemplateCalCert.text(), 'PLTemplateCalCert')
+        self.demon.setTemplateFilename(self.ui.lbPLTemplateError.text(), 'PLTemplateError')
+
+
+        self.demon.setReport(1, self.ui.cbxApprovalReport.isChecked())
+        self.demon.setReport(2, self.ui.cbxApprovalCert.isChecked())
+        self.demon.setReport(3, self.ui.cbxError.isChecked())
+        self.demon.setReport(4, self.ui.cbxCalReport.isChecked())
+        self.demon.setReport(5, self.ui.cbxCalCert.isChecked())
+
+        self.demon.setReport(11, self.ui.cbxPLApprovalReport.isChecked())
+        self.demon.setReport(12, self.ui.cbxPLApprovalCert.isChecked())
+        self.demon.setReport(13, self.ui.cbxPLError.isChecked())
+        self.demon.setReport(14, self.ui.cbxPLCalReport.isChecked())
+        self.demon.setReport(15, self.ui.cbxPLCalCert.isChecked())
+
+
 
     # запускаем процесс автоматической конвертации
     def start(self):
@@ -3901,19 +4438,19 @@ class MainWindow(QMainWindow):
             logging.debug('Изменена папка протоколов: ' + self.demon.Excel_folder)
 
     # выбираем шаблон протокола поверки
-    def selectTemplateApprovalProtocol(self):
+    def selectTemplateApprovalReport(self):
         template, ext = QFileDialog.getOpenFileName(self, 'Выберите файл шаблона потокола поверки',
                                                     self.demon.TemplateApprovalReport, '*.xls;*.docx')
         if template != '':
             template = str(template).replace('/', '\\')
-            self.demon.setTemplateFilename(template, 'TemplateApprovalProtocol')
-            self.ui.lbTemplateApprovalProtocol.setText(self.demon.TemplateApprovalReport)
+            self.demon.setTemplateFilename(template, 'TemplateApprovalReport')
+            self.ui.lbTemplateApprovalReport.setText(self.demon.TemplateApprovalReport)
             logging.debug('Изменен шаблон протокола поверки: ' + self.demon.TemplateApprovalReport)
 
     # выбираем шаблон свидетельства о поверке
     def selectTemplateApprovalCert(self):
         template, ext = QFileDialog.getOpenFileName(self, 'Выберите файл шаблона свидетельства о поверке',
-                                                    self.demon.TemplateApprovalCert, '*.xls;*.docx')
+                                                    self.demon.TemplateApprovalCert, '*.docx')
         if template != '':
             template = str(template).replace('/', '\\')
             self.demon.setTemplateFilename(template, 'TemplateApprovalCert')
@@ -3923,29 +4460,88 @@ class MainWindow(QMainWindow):
     # выбираем шаблон извещения о неригодности
     def selectTemplateError(self):
         template, ext = QFileDialog.getOpenFileName(self, 'Выберите файл шаблона извещения о непригодности',
-                                                    self.demon.TemplateError, '*.xls;*.docx')
+                                                    self.demon.TemplateError, '*.docx')
         if template != '':
             template = str(template).replace('/', '\\')
             self.demon.setTemplateFilename(template, 'TemplateError')
             self.ui.lbTemplateError.setText(self.demon.TemplateError)
 
     # вибираем шаблон протокола калибровки
-    def selectTemplateCalProtocol(self):
+    def selectTemplateCalReport(self):
         template, ext = QFileDialog.getOpenFileName(self, 'Выберите файл шаблона потокола калибровки',
                                                     self.demon.TemplateCalReport, '*.xls;*.docx')
         if template != '':
             template = str(template).replace('/', '\\')
-            self.demon.setTemplateFilename(template, 'TemplateCalProtocol')
-            self.ui.lbTemplateCalProtocol.setText(self.demon.TemplateCalReport)
+            self.demon.setTemplateFilename(template, 'TemplateCalReport')
+            self.ui.lbTemplateCalReport.setText(self.demon.TemplateCalReport)
 
     # вибираем шаблон сертификата калибровки
     def selectTemplateCalCert(self):
         template, ext = QFileDialog.getOpenFileName(self, 'Выберите файл шаблона сертификата калибровки',
-                                                    self.demon.TemplateCalCert, '*.xls;*.docx')
+                                                    self.demon.TemplateCalCert, '*.docx')
         if template != '':
             template = str(template).replace('/', '\\')
             self.demon.setTemplateFilename(template, 'TemplateCalCert')
             self.ui.lbTemplateCalCert.setText(self.demon.TemplateCalCert)
+
+
+    # выбираем шаблон протокола поверки PL
+    def PLselectTemplateApprovalReport(self):
+        template, ext = QFileDialog.getOpenFileName(self, 'Выберите файл шаблона потокола поверки',
+                                                    self.demon.PL_TemplateApprovalReport, '*.docx')
+        if template != '':
+            template = str(template).replace('/', '\\')
+            self.demon.setTemplateFilename(template, 'PLTemplateApprovalReport')
+            self.ui.lbPLTemplateApprovalReport.setText(self.demon.PL_TemplateApprovalReport)
+            logging.debug('Изменен шаблон протокола поверки PL: ' + self.demon.PL_TemplateApprovalReport)
+
+    # выбираем шаблон таблицы протокола поверки PL
+    def PLselectTemplateApprovalReportTable(self):
+        template, ext = QFileDialog.getOpenFileName(self, 'Выберите файл шаблона таблицы потокола поверки',
+                                                    self.demon.PL_TemplateApprovalReportTable, '*.docx')
+        if template != '':
+            template = str(template).replace('/', '\\')
+            self.demon.setTemplateFilename(template, 'PLTemplateApprovalReportTable')
+            self.ui.lbPLTemplateApprovalReportTable.setText(self.demon.PL_TemplateApprovalReportTable)
+            logging.debug('Изменен шаблон протокола поверки PL: ' + self.demon.PL_TemplateApprovalReportTable)
+
+
+    # выбираем шаблон свидетельства о поверке PL
+    def PLselectTemplateApprovalCert(self):
+        template, ext = QFileDialog.getOpenFileName(self, 'Выберите файл шаблона свидетельства о поверке',
+                                                    self.demon.PL_TemplateApprovalCert, '*.docx')
+        if template != '':
+            template = str(template).replace('/', '\\')
+            self.demon.setTemplateFilename(template, 'PLTemplateApprovalCert')
+            self.ui.lbPLTemplateApprovalCert.setText(self.demon.PL_TemplateApprovalCert)
+            logging.debug('Изменен шаблон свидетельства о поверке PL: ' + self.demon.PL_TemplateApprovalCert)
+
+    # выбираем шаблон извещения о неригодности PL
+    def PLselectTemplateError(self):
+        template, ext = QFileDialog.getOpenFileName(self, 'Выберите файл шаблона извещения о непригодности',
+                                                    self.demon.PL_TemplateError, '*.docx')
+        if template != '':
+            template = str(template).replace('/', '\\')
+            self.demon.setTemplateFilename(template, 'PLTemplateError')
+            self.ui.lbPLTemplateError.setText(self.demon.PL_TemplateError)
+
+    # вибираем шаблон протокола калибровки PL
+    def PLselectTemplateCalReport(self):
+        template, ext = QFileDialog.getOpenFileName(self, 'Выберите файл шаблона потокола калибровки',
+                                                    self.demon.PLTemplateCalReport, '*.docx')
+        if template != '':
+            template = str(template).replace('/', '\\')
+            self.demon.setTemplateFilename(template, 'PLTemplateCalReport')
+            self.ui.lbPLTemplateCalReport.setText(self.demon.PLTemplateCalReport)
+
+    # вибираем шаблон сертификата калибровки PL
+    def PLselectTemplateCalCert(self):
+        template, ext = QFileDialog.getOpenFileName(self, 'Выберите файл шаблона сертификата калибровки',
+                                                    self.demon.PL_TemplateCalCert, '*.docx')
+        if template != '':
+            template = str(template).replace('/', '\\')
+            self.demon.setTemplateFilename(template, 'PLTemplateCalCert')
+            self.ui.lbPLTemplateCalCert.setText(self.demon.PL_TemplateCalCert)
 
     # меняем признак автооткрытия
     def changeAutoOpen(self):
@@ -3955,7 +4551,6 @@ class MainWindow(QMainWindow):
         else:
             self.demon.setAutoOpen(False)
             logging.debug('Автооткрытие отключено')
-
 
 # функци запуска приложения
 if __name__ == '__main__':
